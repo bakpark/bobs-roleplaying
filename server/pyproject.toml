@@ -1,0 +1,30 @@
+[project]
+name = "server"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "bakpark",email = "bakparkbj@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "dotenv (>=0.9.9,<0.10.0)",
+    "langsmith (>=0.3.13,<0.4.0)",
+    "langchain-mcp-adapters (>=0.0.3,<0.0.4)",
+    "langchain (>=0.3.20,<0.4.0)",
+    "langgraph (>=0.3.5,<0.4.0)",
+    "langchain-groq (>=0.2.5,<0.3.0)",
+    "langchain-community (>=0.3.19,<0.4.0)",
+    "torch (==2.2.2)",
+    "sentence-transformers (>=3.4.1,<4.0.0)",
+    "numpy (>=1.25,<2.0)",
+    "faiss-cpu (>=1.10.0,<2.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "server", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
