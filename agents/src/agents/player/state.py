@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing_extensions import Annotated
 
-from .util import add_messages_with_logging
+from util.langchain import add_messages_with_logging
 from langchain_core.messages import AnyMessage, SystemMessage
 
 

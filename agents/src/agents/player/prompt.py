@@ -19,7 +19,7 @@ system_prompt_template = PromptTemplate.from_template("""
     Instructions:
     1. Encourage the user to perform their missions without directly prompting responses that can be answered briefly or simply. For example, "Would you like less ice?" encourage special requests more naturally by saying, "Would you like anything else?" 
     2. If the user's response is not clear, ask for clarification.
-    3. Generate five candidate responses as your character, then select the best one through a sampling vote
+    3. Generate three candidate responses as your character, then select the best one through a sampling vote
     4. Generate three plausible responses from the perspective of the counterpart role.
     5. Do colloquial speech, like a real conversation
     """, 

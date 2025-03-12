@@ -1,7 +1,8 @@
 from langgraph.graph import StateGraph, START, END
 from .state import State, InputState
 from .configuration import Configuration
-from .util import load_chat_model, logger
+from util.langchain import load_chat_model
+from util.logging import logger
 from .dto import PlayerLlmResponse
 from typing import Dict, List, cast
 from langchain_core.messages import AIMessage
@@ -29,3 +30,5 @@ graph = builder.compile(
     interrupt_before=[],
     interrupt_after=[]
 )
+
+graph.name = "player"

@@ -1,5 +1,5 @@
 [project]
-name = "agents"
+name = "util"
 version = "0.1.0"
 description = ""
 authors = [
@@ -8,19 +8,16 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "pytest (>=8.3.5,<9.0.0)",
+    "langchain-core (>=0.3.44,<0.4.0)",
     "langchain (>=0.3.20,<0.4.0)",
-    "langgraph (>=0.3.7,<0.4.0)",
-    "langchain-community (>=0.3.19,<0.4.0)",
-    "langchain-openai (>=0.3.8,<0.4.0)"
+    "langgraph (>=0.3.7,<0.4.0)"
 ]
 
 [tool.poetry]
-packages = [{include = "agents", from = "src"}]
+packages = [{include = "util", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "=3.11.11"
-util = {path = "../util", develop = true}
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
