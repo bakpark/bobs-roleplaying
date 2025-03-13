@@ -1,6 +1,6 @@
 """Prompts for the player agent."""
 
-from agents.player.dto import PlayerAgentSystemPromptParams
+from agents.player.schema import PlayerAgentSystemPromptParams
 from langchain_core.prompts import PromptTemplate
 
 system_prompt_template = PromptTemplate.from_template("""

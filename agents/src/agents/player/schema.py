@@ -1,12 +1,12 @@
 from pydantic import BaseModel
-from typing import List, Literal
+from typing import List, Literal, TypedDict
 
 class MissionItem(BaseModel):
     id: Literal["main", "sub1", "sub2", "sub3"]
     success: bool
     
-class PlayerLlmResponse(BaseModel):
-    output: str
+class PlayerLlmResponseSchema(BaseModel):
+    content: str
     missions: List[MissionItem]
     action: str
     counterpart_response: List[str]

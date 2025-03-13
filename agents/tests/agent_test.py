@@ -1,7 +1,7 @@
 import pytest
 from langchain_core.messages import SystemMessage, HumanMessage
 from agents.player import graph
-from agents.player.dto import PlayerAgentSystemPromptParams
+from agents.player.schema import PlayerAgentSystemPromptParams
 from agents.player.prompt import get_player_system_prompt
 
 # @unit
