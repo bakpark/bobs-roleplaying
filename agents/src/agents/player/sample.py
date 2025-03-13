@@ -47,14 +47,3 @@ params = PlayerAgentSystemPromptParams(
     Encourage efficiency but remain patient and approachable to help guide the customer naturally through the interaction.
     """
 )
-
-system_prompt = get_player_system_prompt(params)
-res = graph.invoke(
-    input={
-        "messages": [
-            HumanMessage(content="Can I some order a caffe latte?")
-        ]
-    },
-    config={"configurable": {"thread_id": "1", "model": "openai/gpt-4o-mini", "temperature": 0.2, "system_prompt": system_prompt}}
-)
-print(res)

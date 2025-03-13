@@ -1,7 +1,7 @@
 from langchain_core.language_models import BaseChatModel
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AnyMessage, MessageLikeRepresentation
-from typing import Optional, Literal, Union
+from typing import Annotated, Optional, Literal, TypedDict, Union
 from .logging import logger
 from langgraph.graph import add_messages
 
@@ -23,3 +23,9 @@ def add_messages_with_logging(
     """Add logging to the messages."""
     logger.info(f">> add_messages: {right}")
     return add_messages(left, right, format=format)
+
+class AgentState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
+    
+class LoggableState(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages_with_logging]
