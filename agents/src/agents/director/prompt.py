@@ -50,17 +50,17 @@ v2 = {
         If there are missing details, feel free to fill them in appropriately.
         The final output should follow this format:
         [Acting Script]
-        Situation: {situation}
-        Role: {assistant_actor_role}
-
-        User Missions:  
-        * main: {main_mission}  
-        * sub1: {sub1_mission}  
-        * sub2: {sub2_mission}  
-        * sub3: {sub3_mission}  
-        * hidden: {hidden_mission}  
-
-        Scenario: {scenario}  
-        Instructions: {assistant_actor_instructions}  
+        {
+            "situation": "{situation}",
+            "assistant_actor_role": "{assistant_actor_instructions}",
+            "user_missions": {
+                "main": "{main_mission}",
+                "sub1": "{sub1_mission}",
+                "sub2": "{sub2_mission}",
+                "sub3": "{sub3_mission}",
+                "hidden": "{hidden_mission}"
+            },
+            "scenario": "{scenario}"
+        }
     """
 }
