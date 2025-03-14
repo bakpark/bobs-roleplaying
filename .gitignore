@@ -58,3 +58,4 @@ htmlcov/
 
 # Logs
 logs/
+local_data/

@@ -1,7 +1,8 @@
+import os
 import aiosqlite
 from datetime import datetime
 
-DATABASE_URL = "checkpoints.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite.db")
 
 async def init_db():
     """

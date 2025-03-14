@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 애플리케이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background-color: #f5f7fb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 7;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        .right-panel {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            background-color: #f9fafc;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-avatar {
+            background-color: #4a6fa5;
+        }
+
+        .bot-avatar {
+            background-color: #6c8eb4;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .user-message .message-content {
+            background-color: #4a6fa5;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-content {
+            background-color: #f1f3f6;
+            border-bottom-left-radius: 5px;
+        }
+
+        .time-stamp {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .chat-input-container {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            min-height: 45px;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: #3a5a8a;
+        }
+
+        .send-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .panel-section {
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6fa5;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title svg {
+            margin-right: 8px;
+        }
+
+        .mission-card,
+        .suggestion-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .mission-card:hover,
+        .suggestion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .mission-card {
+            border-left: 4px solid #4a6fa5;
+        }
+
+        .suggestion-card {
+            border-left: 4px solid #66bb6a;
+        }
+
+        .mission-title,
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .mission-desc,
+        .suggestion-desc {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .mission-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        .status-indicator {
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #e3f2fd;
+            color: #4a6fa5;
+            font-weight: 500;
+        }
+
+        .mission-progress {
+            height: 6px;
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4a6fa5;
+            border-radius: 3px;
+        }
+
+        .tag {
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #e8f5e9;
+            color: #66bb6a;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            padding: 10px 15px;
+            background-color: #f1f3f6;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #7f8c8d;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.3s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chat-container,
+            .right-panel {
+                flex: none;
+                width: 100%;
+            }
+
+            .chat-container {
+                height: 60vh;
+            }
+
+            .right-panel {
+                height: 40vh;
+                border-top: 1px solid #e0e0e0;
+                border-left: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <h1>Chat Application</h1>
+    </header>
+
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be added dynamically -->
+            </div>
+
+            <div class="chat-input-container">
+                <textarea class="chat-input" id="messageInput" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+                <button class="send-button" id="sendButton">
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="panel-section missions-container">
+                <div class="panel-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22l-8-4V6l8-4 8 4v12l-8 4z"></path>
+                        <path d="M12 14v8"></path>
+                        <path d="M20 10l-8 4"></path>
+                        <path d="M4 10l8 4"></path>
+                        <path d="M12 2v8"></path>
+                    </svg>
+                    Missions
+                </div>
+                <div class="missions-list" id="missionsList">
+                    <!-- Missions will be added dynamically -->
+                </div>
+            </div>
+
+            <div class="panel-section suggestions-container">
+                <div class="panel-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                        </path>
+                    </svg>
+                    Suggestions
+                </div>
+                <div class="suggestions-list" id="suggestionsList">
+                    <!-- Suggestions will be added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // const sessionId = "TEST-" + Math.random().toString(36).substring(2, 15);
+            const sessionId = "bob-5";
+
+            // DOM Elements
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const missionsList = document.getElementById('missionsList');
+            const suggestionsList = document.getElementById('suggestionsList');
+
+            // Sample data for missions
+            const missions = [
+                {
+                    id: 1,
+                    title: "환영 투어 완료하기",
+                    description: "애플리케이션의 주요 기능을 살펴보고 사용 방법을 익히세요.",
+                    progress: 75,
+                    status: "진행 중"
+                },
+                {
+                    id: 2,
+                    title: "첫 번째 대화 시작하기",
+                    description: "AI 어시스턴트와 첫 번째 대화를 시작하여 소통 방법을 익히세요.",
+                    progress: 20,
+                    status: "시작됨"
+                },
+                {
+                    id: 3,
+                    title: "프로필 설정하기",
+                    description: "개인 프로필을 설정하여 맞춤형 경험을 즐기세요.",
+                    progress: 0,
+                    status: "미시작"
+                }
+            ];
+
+            // Sample data for suggestions
+            const suggestions = [
+                {
+                    id: 1,
+                    title: "일정 관리 도움받기",
+                    description: "AI 어시스턴트에게 일정 관리를 요청해보세요.",
+                    tags: ["생산성", "조직화"]
+                },
+                {
+                    id: 2,
+                    title: "창의적인 아이디어 얻기",
+                    description: "프로젝트에 대한 새로운 아이디어가 필요하신가요?",
+                    tags: ["창의성", "브레인스토밍"]
+                },
+                {
+                    id: 3,
+                    title: "언어 학습하기",
+                    description: "새로운 언어를 배우는데 도움을 받아보세요.",
+                    tags: ["교육", "언어"]
+                }
+            ];
+
+            // Sample conversations
+            const sampleConversations = [
+                {
+                    sender: 'bot',
+                    content: '안녕하세요! 무엇을 도와드릴까요?',
+                    time: getCurrentTime()
+                }
+            ];
+
+            // Initialize chat and panels
+            initializeChat();
+            initializeMissions();
+            initializeSuggestions();
+
+            // Event listeners
+            messageInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+
+                // Auto resize textarea
+                setTimeout(() => {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                }, 0);
+            });
+
+            sendButton.addEventListener('click', sendMessage);
+
+            // Initialize chat with sample messages
+            function initializeChat() {
+                sampleConversations.forEach(msg => {
+                    addMessage(msg.sender, msg.content, msg.time);
+                });
+            }
+
+            // Initialize missions panel
+            function initializeMissions() {
+                missions.forEach(mission => {
+                    const missionCard = document.createElement('div');
+                    missionCard.className = 'mission-card';
+                    missionCard.innerHTML = `
+                        <div class="mission-title">${mission.title}</div>
+                        <div class="mission-desc">${mission.description}</div>
+                        <div class="mission-status">
+                            <span class="status-indicator">${mission.status}</span>
+                            <span>${mission.progress}% 완료</span>
+                        </div>
+                        <div class="mission-progress">
+                            <div class="progress-bar" style="width: ${mission.progress}%"></div>
+                        </div>
+                    `;
+                    missionCard.addEventListener('click', () => {
+                        messageInput.value = `${mission.title}에 대해 알려주세요.`;
+                        messageInput.focus();
+                    });
+                    missionsList.appendChild(missionCard);
+                });
+            }
+
+            // Initialize suggestions panel
+            function initializeSuggestions() {
+                suggestions.forEach(suggestion => {
+                    const suggestionCard = document.createElement('div');
+                    suggestionCard.className = 'suggestion-card';
+                    suggestionCard.innerHTML = `
+                        <div class="suggestion-title">${suggestion.title}</div>
+                        <div class="suggestion-desc">${suggestion.description}</div>
+                        <div>
+                            ${suggestion.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    `;
+                    suggestionCard.addEventListener('click', () => {
+                        messageInput.value = suggestion.title;
+                        messageInput.focus();
+                    });
+                    suggestionsList.appendChild(suggestionCard);
+                });
+            }
+
+            // Send message function
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    // Add user message
+                    const time = getCurrentTime();
+                    addMessage('user', message, time);
+
+                    // Clear input
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+
+                    // Show typing indicator
+                    showTypingIndicator();
+
+                    // Send request to server with timeout
+                    sendPlayerRequest(message, sessionId)
+                        .then(response => {
+                            hideTypingIndicator();
+                            if (!response.content) {
+                                throw new Error(response);
+                            }
+                            addMessage('bot', response.content, getCurrentTime());
+                            // TTS 재생
+                            playTTS(response.content);
+                        })
+                        .catch(error => {
+                            hideTypingIndicator();
+                            console.error('Error:', error);
+                            addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
+                        });
+                }
+            }
+
+            // Add message to chat
+            function addMessage(sender, content, time) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+
+                const avatar = document.createElement('div');
+                avatar.className = `avatar ${sender}-avatar`;
+                avatar.textContent = sender === 'user' ? 'U' : 'B';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+
+                const timeStamp = document.createElement('div');
+                timeStamp.className = 'time-stamp';
+                timeStamp.textContent = time;
+
+                messageContent.appendChild(timeStamp);
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+
+                chatMessages.appendChild(messageDiv);
+                scrollToBottom();
+            }
+
+            // Show typing indicator
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'typingIndicator';
+                typingDiv.className = 'typing-indicator';
+                typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                chatMessages.appendChild(typingDiv);
+                scrollToBottom();
+            }
+
+            // Hide typing indicator
+            function hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            // Get current time
+            function getCurrentTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+
+            // Scroll chat to bottom
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Get random bot response
+            function getRandomResponse() {
+                const responses = [
+                    "어떻게 도와드릴까요?",
+                    "더 필요한 정보가 있으신가요?",
+                    "다른 질문이 있으시면 언제든지 물어보세요.",
+                    "그 질문에 대한 답변을 찾고 있습니다.",
+                    "좋은 질문이네요! 제가 도와드리겠습니다.",
+                    "더 자세한 내용이 필요하시면 알려주세요."
+                ];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+
+            // Send request to player with timeout
+            async function sendPlayerRequest(message, sessionId) {
+                const timeout = 20000; // 10초 타임아웃
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+
+                try {
+                    const response = await fetch('/player', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: sessionId
+                        }),
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    return data.response;
+                } finally {
+                    clearTimeout(id);
+                }
+            }
+
+            // AI 메세지 음성 출력
+            function playTTS(text) {
+                // Fetch API를 사용하여 백엔드 TTS 엔드포인트 호출
+                fetch(`/tts?text=${encodeURIComponent(text)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("음성 변환 요청 실패");
+                        }
+                        return response.blob();  // 오디오 데이터를 Blob 형태로 받음
+                    })
+                    .then(blob => {
+                        // Blob 데이터를 사용하여 오디오 URL 생성
+                        const audioUrl = URL.createObjectURL(blob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();  // 오디오 재생
+                    })
+                    .catch(error => {
+                        console.error("오류 발생:", error);
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>
