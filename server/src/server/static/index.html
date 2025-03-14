@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>채팅 애플리케이션</title>
+    <title>Bob Chat</title>
     <style>
         /* 기본 스타일 리셋 및 전역 설정 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         body {
@@ -254,12 +254,13 @@
             font-weight: 600;
             margin-bottom: 5px;
             color: #2c3e50;
+            font-size: 1.3rem;
         }
 
         .scenario-desc,
         .mission-desc,
         .suggestion-desc {
-            font-size: 0.9rem;
+            font-size: 1.2rem;
             color: #7f8c8d;
         }
 
@@ -531,7 +532,7 @@
 
 <body>
     <header class="header">
-        <h1>Chat Application</h1>
+        <h1>Scenario Role Play</h1>
     </header>
 
     <div class="main-container">
@@ -613,8 +614,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // const sessionId = "TEST-" + Math.random().toString(36).substring(2, 15);
-            const sessionId = "bob-5";
+            const sessionId = "demo-" + Math.random().toString(36).substring(2, 15);
+            const scenarioId = "scenario-3";
 
             // DOM Elements
             const chatMessages = document.getElementById('chatMessages');
@@ -624,52 +625,6 @@
             const missionsList = document.getElementById('missionsList');
             const suggestionsList = document.getElementById('suggestionsList');
             const imageContent = document.getElementById('imageContent');
-            // Sample data for missions
-            const missions = [
-                {
-                    id: 1,
-                    title: "환영 투어 완료하기",
-                    description: "애플리케이션의 주요 기능을 살펴보고 사용 방법을 익히세요.",
-                    progress: 75,
-                    status: "진행 중"
-                },
-                {
-                    id: 2,
-                    title: "첫 번째 대화 시작하기",
-                    description: "AI 어시스턴트와 첫 번째 대화를 시작하여 소통 방법을 익히세요.",
-                    progress: 20,
-                    status: "시작됨"
-                },
-                {
-                    id: 3,
-                    title: "프로필 설정하기",
-                    description: "개인 프로필을 설정하여 맞춤형 경험을 즐기세요.",
-                    progress: 0,
-                    status: "미시작"
-                }
-            ];
-
-            // Sample data for suggestions
-            const suggestions = [
-                {
-                    id: 1,
-                    title: "일정 관리 도움받기",
-                    description: "AI 어시스턴트에게 일정 관리를 요청해보세요.",
-                    tags: ["생산성", "조직화"]
-                },
-                {
-                    id: 2,
-                    title: "창의적인 아이디어 얻기",
-                    description: "프로젝트에 대한 새로운 아이디어가 필요하신가요?",
-                    tags: ["창의성", "브레인스토밍"]
-                },
-                {
-                    id: 3,
-                    title: "언어 학습하기",
-                    description: "새로운 언어를 배우는데 도움을 받아보세요.",
-                    tags: ["교육", "언어"]
-                }
-            ];
 
             // Sample images data
             const sampleImages = [
@@ -681,22 +636,8 @@
                 }
             ];
 
-            // Sample images data
-            const sampleScenarios = [
-                {
-                    id: 1,
-                    title: "Situation",
-                    description: ""
-                },
-                {
-                    id: 2,
-                    title: "Your Role",
-                    description: ""
-                }
-            ];
-
-            // Sample conversations
-            const sampleConversations = [
+            // Placeholder conversations
+            const placeholderConversations = [
                 {
                     sender: 'bot',
                     content: '안녕하세요! 시나리오를 먼저 만들어주세요.',
@@ -706,9 +647,7 @@
 
             // Initialize chat and panels
             initializeChat();
-            initializeScenarios();
-            initializeMissions();
-            initializeSuggestions();
+            initializeDirectings();
             initializeImages();
 
             // Event listeners
@@ -729,22 +668,55 @@
 
             // Initialize chat with sample messages
             function initializeChat() {
-                sampleConversations.forEach(msg => {
+                placeholderConversations.forEach(msg => {
                     addMessage(msg.sender, msg.content, msg.time);
                 });
             }
 
             // Initialize scenario panel
-            function initializeScenarios() {
-                sampleScenarios.forEach(scenario => {
-                    const scenarioCard = document.createElement('div');
-                    scenarioCard.className = 'scenario-card';
-                    scenarioCard.innerHTML = `
-                        <div class="scenario-title">${scenario.title}</div>
-                        <div class="scenario-desc">${scenario.description}</div>
-                    `;
-                    scenarioList.appendChild(scenarioCard);
-                });
+            function initializeDirectings() {
+                // 기존 시나리오 카드들을 제거
+                scenarioList.innerHTML = '';
+
+                // 시나리오 데이터 가져오기
+                fetchDirecting(sessionId)
+                    .then(directing => {
+                        const situationCard = document.createElement('div');
+                        situationCard.className = 'scenario-card';
+                        situationCard.innerHTML = `
+                            <div class="scenario-title">Situation</div>
+                            <div class="scenario-desc">${directing.situation}</div>
+                        `;
+                        scenarioList.appendChild(situationCard);
+
+                        const userRoleCard = document.createElement('div');
+                        userRoleCard.className = 'scenario-card';
+                        userRoleCard.innerHTML = `
+                            <div class="scenario-title">Your Role</div>
+                            <div class="scenario-desc">${directing.user_role}</div>
+                        `;
+                        scenarioList.appendChild(userRoleCard);
+
+                        directing.missions.forEach(mission => {
+                            const missionCard = document.createElement('div');
+                            missionCard.className = 'mission-card';
+                            missionCard.innerHTML = `
+                                <div class="mission-title">${mission.title}</div>
+                                <div class="mission-desc">${mission.description}</div>
+                                <div class="mission-status">
+                                    <span class="status-indicator" id="mission-${mission.mission_id}-status">${mission.mission_id === "hidden" ? "잠김" : "시작 전"}</span>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar" id="mission-${mission.mission_id}-progress" style="width: 0%"></div>
+                                </div>
+                            `;
+                            missionsList.appendChild(missionCard);
+                        });
+                    })
+                    .catch(error => {
+                        // 에러 메시지 표시
+                        console.error('Error initializing scenarios:', error);
+                    })
             }
 
             // Initialize missions panel
@@ -771,8 +743,9 @@
                 });
             }
 
-            // Initialize suggestions panel
-            function initializeSuggestions() {
+            // Change suggestions panel
+            function changeSuggestions(suggestions) {
+                suggestionsList.innerHTML = '';
                 suggestions.forEach(suggestion => {
                     const suggestionCard = document.createElement('div');
                     suggestionCard.className = 'suggestion-card';
@@ -784,7 +757,7 @@
                         </div>
                     `;
                     suggestionCard.addEventListener('click', () => {
-                        messageInput.value = suggestion.title;
+                        messageInput.value = suggestion.description;
                         messageInput.focus();
                     });
                     suggestionsList.appendChild(suggestionCard);
@@ -903,10 +876,11 @@
                     sendPlayerRequest(message, sessionId)
                         .then(response => {
                             hideTypingIndicator();
-                            if (!response.content) {
-                                throw new Error(response);
+                            if (!response.ok) {
+                                throw new Error(response.message);
                             }
                             addMessage('bot', response.content, getCurrentTime());
+                            changeSuggestions(response.suggestions);
                             // TTS 재생
                             playTTS(response.content);
                         })
@@ -989,12 +963,12 @@
 
             // Send request to player with timeout
             async function sendPlayerRequest(message, sessionId) {
-                const timeout = 20000; // 10초 타임아웃
+                const timeout = 30000; // 30초 타임아웃
                 const controller = new AbortController();
                 const id = setTimeout(() => controller.abort(), timeout);
 
                 try {
-                    const response = await fetch('/player', {
+                    const response = await fetch(`/scenario/${scenarioId}/player`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1011,7 +985,8 @@
                     }
 
                     const data = await response.json();
-                    return data.response;
+                    console.log(data);
+                    return data;
                 } finally {
                     clearTimeout(id);
                 }
@@ -1037,6 +1012,25 @@
                         console.error("오류 발생:", error);
                     });
             }
+
+            async function fetchDirecting(sessionId) {
+                try {
+                    const response = await fetch(`/scenario/${scenarioId}/directing`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (!data.ok) {
+                        throw new Error(data.message || '시나리오를 불러오는데 실패했습니다.');
+                    }
+                    console.log(data);
+                    return data.response;
+                } catch (error) {
+                    console.error('Error fetching scenario:', error);
+                    return null;
+                }
+            }
+
         });
     </script>
 </body>

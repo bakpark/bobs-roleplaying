@@ -1,14 +1,13 @@
 from agents.player.prompt import get_player_system_prompt
-from agents.player.schema import PlayerAgentSystemPromptParams
+from agents.player.schema import ActingScriptSchema
 from server.chat_gtts import synthesize_text_to_speech
 from server.db import DATABASE_URL, init_db, insert_acting_script, get_acting_script
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langchain.schema import HumanMessage
 from agents.director.graph import create_director_agent
 from agents.player.graph import create_player_agent
-from server.schema import SimpleMessageRequest, TextRequest
+from server.schema import PlayerActingResponse, SimpleMessageRequest, DirectorMessageRequest, UserDirectingResponse
 from contextlib import asynccontextmanager
-from util.logging import logger
 from fastapi import Response
 
 from contextlib import asynccontextmanager
@@ -36,7 +35,7 @@ app.add_middleware(
 )
 
 @app.post("/director")
-async def director_endpoint(message_request: SimpleMessageRequest):
+async def director_endpoint(message_request: DirectorMessageRequest):
     async with AsyncSqliteSaver.from_conn_string(DATABASE_URL) as conn:
         director_agent = create_director_agent(checkpointer=conn)
         
@@ -44,24 +43,32 @@ async def director_endpoint(message_request: SimpleMessageRequest):
             {"messages": [HumanMessage(content=message_request.message)]}, 
             config={"configurable": {"thread_id": message_request.session_id}}
         )
-        if str(response["messages"][-1].content).find("[Acting Script]") != -1:
+        if str(response["messages"][-1].content).find("[FINAL OUTPUT]") != -1:
             await insert_acting_script(
-                message_request.session_id, 
-                response["messages"][-1].content.split("[Acting Script]")[1].strip()
+                message_request.scenario_id, 
+                response["messages"][-1].content.split("[FINAL OUTPUT]")[1].strip().replace("\n", "").replace("\\", "")
             )
-        return {"response": response["messages"][-1]}    
+        return {"ok": True, "content": response["messages"][-1].content}    
 
-@app.post("/player")
-async def player_endpoint(message_request: SimpleMessageRequest):
+@app.get("/scenario/{scenario_id}/directing")
+async def user_directing_endpoint(scenario_id: str):
+    json_string = await get_acting_script(scenario_id)
+    if json_string is None:
+        return {"ok": False, "message": "No acting script found"}
+    acting_script = ActingScriptSchema.from_json_string(json_string)
+    user_directing_response = UserDirectingResponse.from_acting_script(acting_script)
+    return {"ok": True, "response": user_directing_response}    
+    
+@app.post("/scenario/{scenario_id}/player")
+async def player_endpoint(scenario_id: str, message_request: SimpleMessageRequest):
     async with AsyncSqliteSaver.from_conn_string(DATABASE_URL) as conn:
         player_agent = create_player_agent(checkpointer=conn)
         
-        acting_script = await get_acting_script(message_request.session_id)
-        if acting_script is None:
-            return {"response": "No acting script found"}
-        logger.info(f"Acting script: {acting_script}")
-        prompt_params = PlayerAgentSystemPromptParams.from_json_string(acting_script)
-        player_system_prompt = get_player_system_prompt(prompt_params)
+        json_string = await get_acting_script(scenario_id)
+        if json_string is None:
+            return {"ok": False, "message": "No acting script found"}
+        acting_script = ActingScriptSchema.from_json_string(json_string)
+        player_system_prompt = get_player_system_prompt(acting_script)
         
         response = await player_agent.ainvoke(
             input={
@@ -75,8 +82,18 @@ async def player_endpoint(message_request: SimpleMessageRequest):
                 }
             }
         )
-        logger.info(f"Player response: {response}")
-    return {"response": response["messages"][-1]}
+        return PlayerActingResponse(
+            ok=True,
+            content=response["messages"][-1].content,
+            missions=response["missions"],
+            action=response["action"],
+            suggestions=[{
+                "id": f"suggestion_{i+1}", 
+                "title": f"가능 답변 {i+1}",
+                "tags": [content.difficulty],
+                "description": content.response
+            } for i, content in enumerate(response["expected_response"])]
+        )
 
 @app.get("/tts")
 def tts_endpoint(text: str):
