@@ -15,6 +15,7 @@ class PlayerLlmResponseSchema(BaseModel):
 class PlayerAgentSystemPromptParams(BaseModel):
     situation: str
     assistant_actor_role: str
+    user_role: str
     user_missions: Dict[str, str]
     scenario: str
     def from_json_string(json_string: str) -> "PlayerAgentSystemPromptParams":
@@ -32,6 +33,9 @@ sample_params = PlayerAgentSystemPromptParams(
     When asked about today's special pastry, the employee should naturally and pleasantly mention the special pastry of the day, "Chocolate Almond Danish ($3.75)," even though it isn't clearly displayed on the menu.
     Politely confirm the customer's order and total cost before processing payment.
     Encourage efficiency but remain patient and approachable to help guide the customer naturally through the interaction.
+    """,
+    user_role="""
+    You are a customer at `Sunrise Café`.
     """,
     user_missions={
         "main": "Successfully order breakfast items (at least one food item and one drink) clearly and pay correctly.",

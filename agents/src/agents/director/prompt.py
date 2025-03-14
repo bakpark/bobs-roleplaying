@@ -53,6 +53,7 @@ v2 = {
         {
             "situation": "{situation}",
             "assistant_actor_role": "{assistant_actor_instructions}",
+            "user_role": "{user_role}",
             "user_missions": {
                 "main": "{main_mission}",
                 "sub1": "{sub1_mission}",
