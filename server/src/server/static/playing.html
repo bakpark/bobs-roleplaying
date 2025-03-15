@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob Chat</title>
+    <style>
+        /* 기본 스타일 리셋 및 전역 설정 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background-color: #f5f7fb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 헤더 스타일 */
+        .header {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 메인 컨테이너 레이아웃 */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* 좌측 채팅 컨테이너 */
+        .chat-container {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        /* 중앙 이미지 컨테이너 */
+        .scenario-container {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            background-color: #f9fafc;
+            padding: 1rem;
+            overflow-y: auto;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        /* 우측 패널 */
+        .right-panel {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            background-color: #f9fafc;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        /* 채팅 메시지 영역 */
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* 메시지 스타일 */
+        .message {
+            display: flex;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 아바타 스타일 */
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .user-avatar {
+            background-color: #4a6fa5;
+        }
+
+        .bot-avatar {
+            background-color: #6c8eb4;
+        }
+
+        /* 메시지 내용 스타일 */
+        .message-content {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            margin-left: auto;
+            flex-direction: row-reverse;
+        }
+
+        .user-message .message-content {
+            background-color: #4a6fa5;
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-content {
+            background-color: #f1f3f6;
+            border-bottom-left-radius: 5px;
+        }
+
+        .time-stamp {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        /* 채팅 입력 영역 */
+        .chat-input-container {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #e0e0e0;
+            background-color: white;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            max-height: 120px;
+            min-height: 45px;
+        }
+
+        .send-button {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background-color: #3a5a8a;
+        }
+
+        .send-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 패널 섹션 공통 스타일 */
+        .panel-section {
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #4a6fa5;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title svg {
+            margin-right: 8px;
+        }
+
+        /* 미션 및 제안 카드 스타일 */
+        .scenario-card,
+        .mission-card,
+        .suggestion-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .scenario-card:hover,
+        .mission-card:hover,
+        .suggestion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .scenario-card {
+            border-top: 4px solid #9f8872;
+        }
+
+        .mission-card {
+            border-left: 4px solid #4a6fa5;
+        }
+
+        .suggestion-card {
+            border-left: 4px solid #66bb6a;
+        }
+
+
+        .scenario-title,
+        .mission-title,
+        .suggestion-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 1.3rem;
+        }
+
+        .scenario-desc,
+        .mission-desc,
+        .suggestion-desc {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+
+        /* 미션 상태 및 진행률 스타일 */
+        .mission-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        .status-indicator {
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #e3f2fd;
+            color: #4a6fa5;
+            font-weight: 500;
+        }
+
+        .mission-progress {
+            height: 6px;
+            background-color: #ecf0f1;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: #4a6fa5;
+            border-radius: 3px;
+        }
+
+        /* 태그 스타일 */
+        .tag {
+            padding: 3px 8px;
+            border-radius: 12px;
+            background-color: #e8f5e9;
+            color: #66bb6a;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-top: 8px;
+            margin-right: 5px;
+        }
+
+        /* 타이핑 표시기 스타일 */
+        .typing-indicator {
+            display: flex;
+            padding: 10px 15px;
+            background-color: #f1f3f6;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #7f8c8d;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.3s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* 이미지 컨테이너 스타일 */
+        .image-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-bottom: 2rem;
+            padding-top: 2rem;
+        }
+
+        .image-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+            color: #95a5a6;
+            padding: 2rem;
+        }
+
+        .image-card {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .image-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-title {
+            font-weight: 600;
+            padding: 12px 15px;
+            color: #2c3e50;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .image-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background-color: #f9f9f9;
+        }
+
+        .image-wrapper img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .image-desc {
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        /* 전체화면 이미지 오버레이 */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .fullscreen-content {
+            max-width: 90%;
+            max-height: 90%;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .fullscreen-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .fullscreen-body {
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        .fullscreen-body img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+        }
+
+        .fullscreen-footer {
+            padding: 15px;
+            color: #7f8c8d;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .back-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            outline: none;
+        }
+
+        /* 반응형 스타일 */
+        @media (max-width: 1200px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chat-container {
+                flex: none;
+                height: 50vh;
+            }
+
+            .scenario-container,
+            .right-panel {
+                flex: none;
+                height: 25vh;
+                border-top: 1px solid #e0e0e0;
+                border-left: none;
+            }
+
+            .scenario-container {
+                border-right: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .chat-container,
+            .scenario-container,
+            .right-panel {
+                flex: none;
+                width: 100%;
+            }
+
+            .chat-container {
+                height: 50vh;
+            }
+
+            .scenario-container {
+                height: 25vh;
+                border-top: 1px solid #e0e0e0;
+                border-right: none;
+            }
+
+            .right-panel {
+                height: 25vh;
+                border-top: 1px solid #e0e0e0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header">
+        <button class="back-btn" id="backBtn" onclick="window.location.href='/'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" fill="white" stroke="#4a6fa5" stroke-width="2" />
+                <path d="M22 12l-6 8 6 8" stroke="#4a6fa5" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round" />
+            </svg>
+        </button>
+        <h1>Role Play</h1>
+    </header>
+
+    <div class="main-container">
+        <!-- 새로 추가된 중앙 이미지 컨테이너 -->
+        <div class="scenario-container" id="scenarioContainer">
+            <div class="panel-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Scenario
+            </div>
+            <div class="scenario-list" id="scenarioList">
+                <!-- Scenario will be added dynamically -->
+            </div>
+            <div class="image-content" id="imageContent">
+                <!-- 이미지가 동적으로 추가될 영역 -->
+                <div class="image-placeholder">
+                    <p>아직 표시할 이미지가 없습니다.</p>
+                    <p>대화에서 이미지가 생성되면 여기에 표시됩니다.</p>
+                </div>
+            </div>
+        </div>
+        <!-- 좌측 채팅 컨테이너 -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be added dynamically -->
+            </div>
+
+            <div class="chat-input-container">
+                <textarea class="chat-input" id="messageInput" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+                <button class="send-button" id="sendButton">
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- 우측 패널 -->
+        <div class="right-panel">
+            <div class="panel-section missions-container">
+                <div class="panel-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22l-8-4V6l8-4 8 4v12l-8 4z"></path>
+                        <path d="M12 14v8"></path>
+                        <path d="M20 10l-8 4"></path>
+                        <path d="M4 10l8 4"></path>
+                        <path d="M12 2v8"></path>
+                    </svg>
+                    Missions
+                </div>
+                <div class="missions-list" id="missionsList">
+                    <!-- Missions will be added dynamically -->
+                </div>
+            </div>
+
+            <div class="panel-section suggestions-container">
+                <div class="panel-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+                        </path>
+                    </svg>
+                    Suggestions
+                </div>
+                <div class="suggestions-list" id="suggestionsList">
+                    <!-- Suggestions will be added dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sessionId = "demo-" + Math.random().toString(36).substring(2, 15);
+            const scenarioId = "scenario-6";
+
+            // DOM Elements
+            const chatMessages = document.getElementById('chatMessages');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const scenarioList = document.getElementById('scenarioList');
+            const missionsList = document.getElementById('missionsList');
+            const suggestionsList = document.getElementById('suggestionsList');
+            const imageContent = document.getElementById('imageContent');
+
+            // Sample images data
+            const sampleImages = [
+                {
+                    id: 1,
+                    title: "Make your own scenario",
+                    src: "/placeholder.jpg",
+                    description: ""
+                }
+            ];
+
+            // Placeholder conversations
+            const placeholderConversations = [
+                {
+                    sender: 'bot',
+                    content: '안녕하세요! 시나리오를 먼저 만들어주세요.',
+                    time: getCurrentTime()
+                }
+            ];
+
+            // Initialize chat and panels
+            initializeChat();
+            initializeDirectings();
+            initializeImages();
+
+            // Event listeners
+            messageInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+
+                // Auto resize textarea
+                setTimeout(() => {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                }, 0);
+            });
+
+            sendButton.addEventListener('click', sendMessage);
+
+            // Initialize chat with sample messages
+            function initializeChat() {
+                placeholderConversations.forEach(msg => {
+                    addMessage(msg.sender, msg.content, msg.time);
+                });
+            }
+
+            // Initialize scenario panel
+            function initializeDirectings() {
+                // 기존 시나리오 카드들을 제거
+                scenarioList.innerHTML = '';
+
+                // 시나리오 데이터 가져오기
+                fetchDirecting(sessionId)
+                    .then(directing => {
+                        const situationCard = document.createElement('div');
+                        situationCard.className = 'scenario-card';
+                        situationCard.innerHTML = `
+                            <div class="scenario-title">Situation</div>
+                            <div class="scenario-desc">${directing.situation}</div>
+                        `;
+                        scenarioList.appendChild(situationCard);
+
+                        const userRoleCard = document.createElement('div');
+                        userRoleCard.className = 'scenario-card';
+                        userRoleCard.innerHTML = `
+                            <div class="scenario-title">Your Role</div>
+                            <div class="scenario-desc">${directing.user_role}</div>
+                        `;
+                        scenarioList.appendChild(userRoleCard);
+
+                        directing.missions.forEach(mission => {
+                            const missionCard = document.createElement('div');
+                            missionCard.className = 'mission-card';
+                            missionCard.innerHTML = `
+                                <div class="mission-title">${mission.title}</div>
+                                <div class="mission-desc">${mission.description}</div>
+                                <div class="mission-status">
+                                    <span class="status-indicator" id="mission-${mission.mission_id}-status">${mission.mission_id === "hidden" ? "잠김" : "시작 전"}</span>
+                                </div>
+                                <div class="mission-progress">
+                                    <div class="progress-bar" id="mission-${mission.mission_id}-progress" style="width: 0%"></div>
+                                </div>
+                            `;
+                            missionsList.appendChild(missionCard);
+                        });
+                    })
+                    .catch(error => {
+                        // 에러 메시지 표시
+                        console.error('Error initializing scenarios:', error);
+                    })
+            }
+
+            // Initialize missions panel
+            function initializeMissions() {
+                missions.forEach(mission => {
+                    const missionCard = document.createElement('div');
+                    missionCard.className = 'mission-card';
+                    missionCard.innerHTML = `
+                        <div class="mission-title">${mission.title}</div>
+                        <div class="mission-desc">${mission.description}</div>
+                        <div class="mission-status">
+                            <span class="status-indicator">${mission.status}</span>
+                            <span>${mission.progress}% 완료</span>
+                        </div>
+                        <div class="mission-progress">
+                            <div class="progress-bar" style="width: ${mission.progress}%"></div>
+                        </div>
+                    `;
+                    missionCard.addEventListener('click', () => {
+                        messageInput.value = `${mission.title}에 대해 알려주세요.`;
+                        messageInput.focus();
+                    });
+                    missionsList.appendChild(missionCard);
+                });
+            }
+
+            // Change suggestions panel
+            function changeSuggestions(suggestions) {
+                suggestionsList.innerHTML = '';
+                suggestions.forEach(suggestion => {
+                    const suggestionCard = document.createElement('div');
+                    suggestionCard.className = 'suggestion-card';
+                    suggestionCard.innerHTML = `
+                        <div class="suggestion-title">${suggestion.title}</div>
+                        <div class="suggestion-desc">${suggestion.description}</div>
+                        <div>
+                            ${suggestion.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    `;
+                    suggestionCard.addEventListener('click', () => {
+                        messageInput.value = suggestion.description;
+                        messageInput.focus();
+                    });
+                    suggestionsList.appendChild(suggestionCard);
+                });
+            }
+
+            // Initialize images panel
+            function initializeImages() {
+                if (sampleImages.length > 0) {
+                    imageContent.innerHTML = ''; // 기존 자리표시자 제거
+
+                    sampleImages.forEach(image => {
+                        const imageCard = document.createElement('div');
+                        imageCard.className = 'image-card';
+                        imageCard.innerHTML = `
+                            <div class="image-title">${image.title}</div>
+                            <div class="image-wrapper">
+                                <img src="${image.src}" alt="${image.description}" />
+                            </div>
+                            <div class="image-desc">${image.description}</div>
+                        `;
+
+                        // 이미지 클릭 시 전체 화면으로 보기
+                        imageCard.addEventListener('click', () => {
+                            displayFullScreenImage(image);
+                        });
+
+                        imageContent.appendChild(imageCard);
+                    });
+                }
+            }
+
+            // 이미지를 전체 화면으로 표시
+            function displayFullScreenImage(image) {
+                const overlay = document.createElement('div');
+                overlay.className = 'fullscreen-overlay';
+                overlay.innerHTML = `
+                    <div class="fullscreen-content">
+                        <div class="fullscreen-header">
+                            <div class="fullscreen-title">${image.title}</div>
+                            <button class="close-button">×</button>
+                        </div>
+                        <div class="fullscreen-body">
+                            <img src="${image.src}" alt="${image.description}" />
+                        </div>
+                        <div class="fullscreen-footer">${image.description}</div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                // 닫기 버튼 이벤트
+                overlay.querySelector('.close-button').addEventListener('click', () => {
+                    document.body.removeChild(overlay);
+                });
+
+                // 오버레이 배경 클릭 시 닫기
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        document.body.removeChild(overlay);
+                    }
+                });
+            }
+
+            // 채팅에서 이미지 생성 및 추가
+            function addImageFromChat(title, description) {
+                const newImage = {
+                    id: Date.now(),
+                    title: title,
+                    src: `/api/placeholder/300/200?text=${encodeURIComponent(title)}`,
+                    description: description
+                };
+
+                const imageCard = document.createElement('div');
+                imageCard.className = 'image-card';
+                imageCard.innerHTML = `
+                    <div class="image-title">${newImage.title}</div>
+                    <div class="image-wrapper">
+                        <img src="${newImage.src}" alt="${newImage.description}" />
+                    </div>
+                    <div class="image-desc">${newImage.description}</div>
+                `;
+
+                // 이미지 클릭 시 전체 화면으로 보기
+                imageCard.addEventListener('click', () => {
+                    displayFullScreenImage(newImage);
+                });
+
+                // 자리표시자가 있는 경우 제거
+                if (document.querySelector('.image-placeholder')) {
+                    imageContent.innerHTML = '';
+                }
+
+                imageContent.appendChild(imageCard);
+
+                // 이미지 추가 메시지
+                addMessage('bot', `이미지가 생성되었습니다: ${title}`, getCurrentTime());
+            }
+
+            // Send message function
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    // Add user message
+                    const time = getCurrentTime();
+                    addMessage('user', message, time);
+
+                    // Clear input
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+
+                    // Show typing indicator
+                    showTypingIndicator();
+
+                    // Send request to server with timeout
+                    sendPlayerRequest(message, sessionId)
+                        .then(response => {
+                            hideTypingIndicator();
+                            if (!response.ok) {
+                                throw new Error(response.message);
+                            }
+                            addMessage('bot', response.content, getCurrentTime());
+                            changeSuggestions(response.suggestions);
+                            // TTS 재생
+                            playTTS(response.content);
+                        })
+                        .catch(error => {
+                            hideTypingIndicator();
+                            console.error('Error:', error);
+                            addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
+                        });
+                }
+            }
+
+            // Add message to chat
+            function addMessage(sender, content, time) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}-message`;
+
+                const avatar = document.createElement('div');
+                avatar.className = `avatar ${sender}-avatar`;
+                avatar.textContent = sender === 'user' ? 'U' : 'B';
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+
+                const timeStamp = document.createElement('div');
+                timeStamp.className = 'time-stamp';
+                timeStamp.textContent = time;
+
+                messageContent.appendChild(timeStamp);
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+
+                chatMessages.appendChild(messageDiv);
+                scrollToBottom();
+            }
+
+            // Show typing indicator
+            function showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.id = 'typingIndicator';
+                typingDiv.className = 'typing-indicator';
+                typingDiv.innerHTML = '<span></span><span></span><span></span>';
+                chatMessages.appendChild(typingDiv);
+                scrollToBottom();
+            }
+
+            // Hide typing indicator
+            function hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            // Get current time
+            function getCurrentTime() {
+                const now = new Date();
+                const hours = now.getHours().toString().padStart(2, '0');
+                const minutes = now.getMinutes().toString().padStart(2, '0');
+                return `${hours}:${minutes}`;
+            }
+
+            // Scroll chat to bottom
+            function scrollToBottom() {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Get random bot response
+            function getRandomResponse() {
+                const responses = [
+                    "어떻게 도와드릴까요?",
+                    "더 필요한 정보가 있으신가요?",
+                    "다른 질문이 있으시면 언제든지 물어보세요.",
+                    "그 질문에 대한 답변을 찾고 있습니다.",
+                    "좋은 질문이네요! 제가 도와드리겠습니다.",
+                    "더 자세한 내용이 필요하시면 알려주세요."
+                ];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+
+            // Send request to player with timeout
+            async function sendPlayerRequest(message, sessionId) {
+                const timeout = 30000; // 30초 타임아웃
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+
+                try {
+                    const response = await fetch(`/scenario/${scenarioId}/player`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: sessionId
+                        }),
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    console.log(data);
+                    return data;
+                } finally {
+                    clearTimeout(id);
+                }
+            }
+
+            // AI 메세지 음성 출력
+            function playTTS(text) {
+                // Fetch API를 사용하여 백엔드 TTS 엔드포인트 호출
+                fetch(`/tts?text=${encodeURIComponent(text)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error("음성 변환 요청 실패");
+                        }
+                        return response.blob();  // 오디오 데이터를 Blob 형태로 받음
+                    })
+                    .then(blob => {
+                        // Blob 데이터를 사용하여 오디오 URL 생성
+                        const audioUrl = URL.createObjectURL(blob);
+                        const audio = new Audio(audioUrl);
+                        audio.play();  // 오디오 재생
+                    })
+                    .catch(error => {
+                        console.error("오류 발생:", error);
+                    });
+            }
+
+            async function fetchDirecting(sessionId) {
+                try {
+                    const response = await fetch(`/scenario/${scenarioId}/directing`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (!data.ok) {
+                        throw new Error(data.message || '시나리오를 불러오는데 실패했습니다.');
+                    }
+                    console.log(data);
+                    return data.response;
+                } catch (error) {
+                    console.error('Error fetching scenario:', error);
+                    return null;
+                }
+            }
+
+        });
+    </script>
+</body>
+
+</html>
