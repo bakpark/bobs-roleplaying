@@ -1,8 +1,11 @@
 """Prompts for the player agent."""
-from agents.player.schema import ActingScriptSchema
+
 from langchain_core.prompts import PromptTemplate
 
-system_prompt_template = PromptTemplate.from_template("""
+from agents.player.schema import ActingScriptSchema
+
+system_prompt_template = PromptTemplate.from_template(
+    """
 ROLE-PLAYING FRAMEWORK: INTERACTIVE SCENARIO SIMULATION
 
 [SCENARIO CONFIGURATION]
@@ -37,9 +40,10 @@ User Missions:
 
 [IMPORTANT]
 Remain fully immersed in your character throughout the entire interaction. The simulation ends only when explicitly indicated by the user.
-    """, 
-    template_format="mustache"
-    )
+    """,
+    template_format="mustache",
+)
+
 
 def get_player_system_prompt(params: ActingScriptSchema) -> str:
     return system_prompt_template.format(

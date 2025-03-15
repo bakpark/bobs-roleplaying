@@ -1,21 +1,23 @@
 """Define the configurable parameters for the agent."""
 
 from dataclasses import dataclass, field, fields
-from typing_extensions import Annotated
 from typing import Optional
+
 from langchain_core.runnables import RunnableConfig, ensure_config
+from typing_extensions import Annotated
+
 
 @dataclass(kw_only=True)
 class Configuration:
     """The configuration for the agent."""
-    
-    system_prompt: str = field(
-        default="You are a role-playing player.",
-        metadata={
-            "description": "The system prompt to use for the player agent."
-        }
-    ),
-    
+
+    system_prompt: str = (
+        field(
+            default="You are a role-playing player.",
+            metadata={"description": "The system prompt to use for the player agent."},
+        ),
+    )
+
     model: Annotated[str, {"__template_metadata__": {"kind": "llm"}}] = field(
         default="openai/gpt-4o-mini",
         metadata={
@@ -23,14 +25,14 @@ class Configuration:
             "Should be in the form: provider/model-name."
         },
     )
-    
+
     temperature: float = field(
         default=0.2,
         metadata={
             "description": "The temperature to use for the player agent's model."
-        }
+        },
     )
-    
+
     @classmethod
     def from_runnable_config(
         cls, config: Optional[RunnableConfig] = None

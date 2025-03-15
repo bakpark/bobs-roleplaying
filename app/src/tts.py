@@ -1,6 +1,9 @@
 from io import BytesIO
-from util import logger
+
 from gtts import gTTS
+
+from util import logger
+
 
 # TTS 변환 함수 (예시로 gTTS 사용 또는 외부 TTS API 호출 자리)
 def synthesize_text_to_speech(text: str) -> bytes:
@@ -20,4 +23,4 @@ def synthesize_text_to_speech(text: str) -> bytes:
     else:
         logger.error(">gtts import error")
         # gTTS 사용 불가한 경우: 실제 TTS 엔진/API 호출로 대체
-        return b""    
+        return b""

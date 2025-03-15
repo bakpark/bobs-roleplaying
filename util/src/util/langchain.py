@@ -1,9 +1,12 @@
-from langchain_core.language_models import BaseChatModel
+from typing import Annotated, Literal, Optional, TypedDict, Union
+
 from langchain.chat_models import init_chat_model
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AnyMessage, MessageLikeRepresentation
-from typing import Annotated, Optional, Literal, TypedDict, Union
-from .logging import logger
 from langgraph.graph import add_messages
+
+from .logging import logger
+
 
 def load_chat_model(fully_specified_name: str) -> BaseChatModel:
     """Load a chat model from a fully specified name.
@@ -13,6 +16,7 @@ def load_chat_model(fully_specified_name: str) -> BaseChatModel:
     """
     provider, model = fully_specified_name.split("/", maxsplit=1)
     return init_chat_model(model, model_provider=provider)
+
 
 def add_messages_with_logging(
     left: Union[list[MessageLikeRepresentation], MessageLikeRepresentation],
@@ -24,8 +28,10 @@ def add_messages_with_logging(
     logger.info(f">> add_messages: {right}")
     return add_messages(left, right, format=format)
 
+
 class AgentState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
-    
+
+
 class LoggableState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages_with_logging]

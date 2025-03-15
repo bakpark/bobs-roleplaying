@@ -1,4 +1,3 @@
-
 v2 = {
     "script_writer_prompt": """ 
 You are a professional scriptwriter specializing in interactive dialogue scenarios. Your task is to create a two-person script featuring the User and an Assistant character (distinct from yourself as the AI).
@@ -12,7 +11,7 @@ SCRIPT REQUIREMENTS:
 2. Incorporate four distinct missions for the User to complete:
    - One main mission that, when completed, concludes the scenario (include clear completion conditions)
    - Two sub-missions (labeled sub, hidden) that can be achieved through specific actions or dialogue choices
-   - Each mission should be challenging but achievable within the context
+   - Each mission should be challenging but achievable within the dialogue context
 
 3. Instructions for the Assistant character:
    - The Assistant should subtly guide the interaction toward mission completion

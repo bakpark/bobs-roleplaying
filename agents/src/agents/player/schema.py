@@ -1,36 +1,43 @@
 import json
-from pydantic import BaseModel
 from typing import List, Literal
 
+from pydantic import BaseModel
+
 mission_ids = Literal["main", "sub", "hidden"]
+
 
 class MissionItem(BaseModel):
     id: mission_ids
     success: bool
-    
+
+
 class ExpectedUserResponse(BaseModel):
     response: str
     difficulty: Literal["Basic", "Intermediate", "Complex"]
-    
+
+
 class PlayerLlmResponseSchema(BaseModel):
     response: str
     missions: List[MissionItem]
     action: str
     expected_user_response: List[ExpectedUserResponse]
-    
+
+
 class UserMission(BaseModel):
     main: str
     sub: str
-    hidden: str    
+    hidden: str
+
 
 class ActingScriptSchema(BaseModel):
     situation: str
     assistant_actor_role: str
     user_role: str
     user_missions: UserMission
-    
+
     def from_json_string(json_string: str) -> "ActingScriptSchema":
         return ActingScriptSchema(**json.loads(json_string))
+
 
 # Sample params
 sample_params = ActingScriptSchema(
@@ -51,6 +58,6 @@ sample_params = ActingScriptSchema(
     user_missions={
         "main": "Successfully order breakfast items (at least one food item and one drink) clearly and pay correctly.",
         "sub": "Ask clearly about the ingredients of one menu item (e.g., Avocado Toast).",
-        "hidden": "Attempt to get information about today's special pastry (not listed clearly on the menu)"
-    }
-)    
+        "hidden": "Attempt to get information about today's special pastry (not listed clearly on the menu)",
+    },
+)

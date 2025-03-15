@@ -633,7 +633,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const sessionId = "demo-" + Math.random().toString(36).substring(2, 15);
-            const scenarioId = "scenario-6";
+            const scenarioId = "scenario-7";
 
             // DOM Elements
             const chatMessages = document.getElementById('chatMessages');
@@ -986,7 +986,7 @@
                 const id = setTimeout(() => controller.abort(), timeout);
 
                 try {
-                    const response = await fetch(`/scenario/${scenarioId}/player`, {
+                    const response = await fetch(`/agents/scenario/${scenarioId}/player`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1013,7 +1013,7 @@
             // AI 메세지 음성 출력
             function playTTS(text) {
                 // Fetch API를 사용하여 백엔드 TTS 엔드포인트 호출
-                fetch(`/tts?text=${encodeURIComponent(text)}`)
+                fetch(`/api/tts?text=${encodeURIComponent(text)}`)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error("음성 변환 요청 실패");
@@ -1033,7 +1033,7 @@
 
             async function fetchDirecting(sessionId) {
                 try {
-                    const response = await fetch(`/scenario/${scenarioId}/directing`);
+                    const response = await fetch(`/api/scenario/${scenarioId}/directing`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
