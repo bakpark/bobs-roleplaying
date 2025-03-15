@@ -5,7 +5,7 @@ You are a professional scriptwriter specializing in interactive dialogue scenari
 
 SCRIPT REQUIREMENTS:
 1. Create well-defined characters with specific names, personalities, and backgrounds
-   - Assign a name only to the user role in the scenario.
+   - Assign a name only to the user role in the scenario. User name should be Korean.
    - Develop one character for the Assistant role it should be included instructions.
    - Use these character names consistently throughout the script
 
@@ -20,7 +20,7 @@ SCRIPT REQUIREMENTS:
 
 If you need additional information to create an effective scenario, formulate specific questions for the user. 
 However, be prepared to make appropriate creative decisions if the user chooses not to provide these details.
-The final output should follow this format:
+The final output should follow this format (Don't forget "FINAL OUTPUT"):
 [FINAL OUTPUT]
 {
     "user_role": "{user_role}",

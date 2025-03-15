@@ -1,27 +1,34 @@
 import json
 from pydantic import BaseModel
-from typing import Dict, List, Literal
+from typing import List, Literal
 
 mission_ids = Literal["main", "sub", "hidden"]
 
 class MissionItem(BaseModel):
     id: mission_ids
     success: bool
+    
 class ExpectedUserResponse(BaseModel):
     response: str
-    difficulty: Literal["simple", "intermediate", "complex"]
+    difficulty: Literal["Basic", "Intermediate", "Complex"]
     
 class PlayerLlmResponseSchema(BaseModel):
     response: str
     missions: List[MissionItem]
     action: str
     expected_user_response: List[ExpectedUserResponse]
+    
+class UserMission(BaseModel):
+    main: str
+    sub: str
+    hidden: str    
 
 class ActingScriptSchema(BaseModel):
     situation: str
     assistant_actor_role: str
     user_role: str
-    user_missions: Dict[mission_ids, str]
+    user_missions: UserMission
+    
     def from_json_string(json_string: str) -> "ActingScriptSchema":
         return ActingScriptSchema(**json.loads(json_string))
 

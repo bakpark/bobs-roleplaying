@@ -23,10 +23,10 @@ User Missions:
 - Evaluate each for authenticity and effectiveness
 - Deliver the most appropriate option
 
-5. For each user interaction, internally prepare for three potential user responses:
-- Basic: Simple, straightforward reaction
+5. For each user interaction, anticipate and prepare three potential user responses in context, categorized by the following complexity levels:
+- Basic: Simple, straightforward response
 - Intermediate: Moderately complex response with some nuance
-- Advanced: Sophisticated response that introduces new elements or complications
+- Advanced: Natural, nuanced response using sophisticated vocabulary and expressions that demonstrate a high proficiency in English
 
 [COMMUNICATION STYLE]
 - Use conversational, informal language appropriate to your character
@@ -46,7 +46,7 @@ def get_player_system_prompt(params: ActingScriptSchema) -> str:
         situation=params.situation,
         assistant_actor_role=params.assistant_actor_role,
         user_role=params.user_role,
-        main_mission=params.user_missions["main"],
-        sub_mission=params.user_missions["sub"],
-        hidden_mission=params.user_missions["hidden"],
+        main_mission=params.user_missions.main,
+        sub_mission=params.user_missions.sub,
+        hidden_mission=params.user_missions.hidden,
     )

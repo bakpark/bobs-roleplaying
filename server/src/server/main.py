@@ -1,5 +1,7 @@
+import asyncio
 from agents.player.prompt import get_player_system_prompt
-from agents.player.schema import ActingScriptSchema
+from agents.player.schema import ActingScriptSchema, PlayerLlmResponseSchema
+from server.translation import toKorean, toKoreanWithAgent
 from server.chat_gtts import synthesize_text_to_speech
 from server.db import DATABASE_URL, init_db, insert_acting_script, get_acting_script
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
@@ -43,12 +45,16 @@ async def director_endpoint(message_request: DirectorMessageRequest):
             {"messages": [HumanMessage(content=message_request.message)]}, 
             config={"configurable": {"thread_id": message_request.session_id}}
         )
-        if str(response["messages"][-1].content).find("[FINAL OUTPUT]") != -1:
+        
+        assistant_message = response["messages"][-1].content
+        if str(assistant_message).find("[FINAL OUTPUT]") != -1:
+            final_output = assistant_message.split("[FINAL OUTPUT]")[1].strip().replace("\n", "").replace("\\", "")
+            translated : ActingScriptSchema = await toKoreanWithAgent(final_output, ActingScriptSchema)
             await insert_acting_script(
                 message_request.scenario_id, 
-                response["messages"][-1].content.split("[FINAL OUTPUT]")[1].strip().replace("\n", "").replace("\\", "")
+                translated.model_dump_json()
             )
-        return {"ok": True, "content": response["messages"][-1].content}    
+        return {"ok": True, "content": assistant_message}
 
 @app.get("/scenario/{scenario_id}/directing")
 async def user_directing_endpoint(scenario_id: str):
@@ -56,7 +62,7 @@ async def user_directing_endpoint(scenario_id: str):
     if json_string is None:
         return {"ok": False, "message": "No acting script found"}
     acting_script = ActingScriptSchema.from_json_string(json_string)
-    user_directing_response = UserDirectingResponse.from_acting_script(acting_script)
+    user_directing_response = await UserDirectingResponse.from_acting_script(acting_script)
     return {"ok": True, "response": user_directing_response}    
     
 @app.post("/scenario/{scenario_id}/player")
@@ -82,6 +88,12 @@ async def player_endpoint(scenario_id: str, message_request: SimpleMessageReques
                 }
             }
         )
+        
+        # 비동기 병렬 번역
+        translated_suggestions = await asyncio.gather(*[
+            toKorean(content.response) for content in response["expected_response"]
+        ])
+        
         return PlayerActingResponse(
             ok=True,
             content=response["messages"][-1].content,
@@ -89,9 +101,9 @@ async def player_endpoint(scenario_id: str, message_request: SimpleMessageReques
             action=response["action"],
             suggestions=[{
                 "id": f"suggestion_{i+1}", 
-                "title": f"가능 답변 {i+1}",
+                "title": content.response,
                 "tags": [content.difficulty],
-                "description": content.response
+                "description": translated_suggestions[i]
             } for i, content in enumerate(response["expected_response"])]
         )
 
