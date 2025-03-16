@@ -1,19 +1,21 @@
 import asyncio
+
+from agents.director.graph import create_director_agent
+from agents.director.schema.schema import DirectorState
+from agents.player.graph import create_player_agent
+from agents.player.prompt import get_player_system_prompt
+from agents.scriptwriter.schema import ActingScriptSchema
 from fastapi import APIRouter
 from langchain.schema import HumanMessage
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
 from src.db import DATABASE_URL, get_acting_script, insert_acting_script
 from src.schema import (
     DirectorMessageRequest,
     PlayerActingResponse,
     SimpleMessageRequest,
 )
-from src.translation import toKorean, toKoreanWithAgent
-
-from agents.director.graph import create_director_agent
-from agents.player.graph import create_player_agent
-from agents.player.prompt import get_player_system_prompt
-from agents.player.schema import ActingScriptSchema
+from src.translation import toKorean
 
 router = APIRouter()
 
@@ -23,26 +25,20 @@ async def director_endpoint(message_request: DirectorMessageRequest):
     async with AsyncSqliteSaver.from_conn_string(DATABASE_URL) as conn:
         director_agent = create_director_agent(checkpointer=conn)
 
-        response = await director_agent.ainvoke(
+        response: DirectorState = await director_agent.ainvoke(
             {"messages": [HumanMessage(content=message_request.message)]},
             config={"configurable": {"thread_id": message_request.session_id}},
         )
 
-        assistant_message = response["messages"][-1].content
-        if str(assistant_message).find("[FINAL OUTPUT]") != -1:
-            final_output = (
-                assistant_message.split("[FINAL OUTPUT]")[1]
-                .strip()
-                .replace("\n", "")
-                .replace("\\", "")
-            )
-            translated: ActingScriptSchema = await toKoreanWithAgent(
-                final_output, ActingScriptSchema
-            )
+        end = response["user_intent"] in ["Acceptance [FINAL OUTPUT]", "Stop"]
+        if end:
+            acting_script = response["script"]
             await insert_acting_script(
-                message_request.scenario_id, translated.model_dump_json()
+                message_request.scenario_id, acting_script.model_dump_json()
             )
-        return {"ok": True, "content": assistant_message}
+
+        assistant_message = response["messages"][-1].content
+        return {"ok": True, "content": assistant_message, "end": end}
 
 
 @router.post("/scenario/{scenario_id}/player")

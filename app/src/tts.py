@@ -1,7 +1,6 @@
 from io import BytesIO
 
 from gtts import gTTS
-
 from util import logger
 
 

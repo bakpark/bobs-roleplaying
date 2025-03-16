@@ -1,9 +1,8 @@
 from typing import Union
 
+from agents.translator import create_translator_agent
 from googletrans import Translator
 from pydantic import BaseModel
-
-from agents.translator import create_translator_agent
 
 # 전역 변수로 선언하여 재사용
 translator = Translator()

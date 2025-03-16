@@ -1,6 +1,6 @@
+from agents.scriptwriter.schema import ActingScriptSchema
 from fastapi import APIRouter, Response
 
-from agents.player.schema import ActingScriptSchema
 from src.db import get_acting_script
 from src.schema import UserDirectingResponse
 from src.tts import synthesize_text_to_speech

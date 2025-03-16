@@ -1,8 +1,8 @@
 """Prompts for the player agent."""
 
+from agents.scriptwriter.schema import ActingScriptSchema
 from langchain_core.prompts import PromptTemplate
 
-from agents.player.schema import ActingScriptSchema
 
 system_prompt_template = PromptTemplate.from_template(
     """

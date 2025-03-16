@@ -1,8 +1,8 @@
 from typing import Any
 
+from agents.player.schema import MissionItem
+from agents.scriptwriter.schema import ActingScriptSchema
 from pydantic import BaseModel
-
-from agents.player.schema import ActingScriptSchema, MissionItem
 
 
 class SimpleMessageRequest(BaseModel):

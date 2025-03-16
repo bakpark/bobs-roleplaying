@@ -1,0 +1,26 @@
+{
+    "name": "Question_Response",
+    "strict": false,
+    "schema": {
+        "question": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "The text of the question in korean."
+                },
+                "options": {
+                    "type": "array",
+                    "description": "A list of options available for the question.",
+                    "items": {
+                        "type": "string",
+                        "description": "An individual option as a string in korean."
+                    }
+                }
+            }
+        },
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+}
