@@ -15,7 +15,9 @@ async def director_endpoint(
     message_request: SimpleMessageRequest,
     session_data: SessionData = Depends(get_session_data),
 ) -> DirectorResponse:
-    response = await agent_service.direct(message_request.message, session_data)
+    response = await agent_service.direct(
+        session_data.email, message_request.message, str(session_data.session_id)
+    )
     return response
 
 
@@ -26,6 +28,6 @@ async def player_endpoint(
     session_data: SessionData = Depends(get_session_data),
 ) -> PlayerResponse:
     response = await agent_service.play(
-        script_id, message_request.message, session_data
+        script_id, message_request.message, str(session_data.session_id)
     )
     return response

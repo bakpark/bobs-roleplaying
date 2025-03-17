@@ -36,10 +36,10 @@ async def get_logout(session: Optional[SessionData] = Depends(get_session_data))
     return RedirectResponse(url="/login")
 
 
-@router.get("/scenario/{scenario_id}")
+@router.get("/script/{script_id}")
 async def get_play(
     request: Request,
-    scenario_id: str,
+    script_id: str,
     session: Optional[SessionData] = Depends(get_session_data),
 ):
     if session is None:
@@ -47,5 +47,9 @@ async def get_play(
     return templates.TemplateResponse(
         request=request,
         name="playing.html",
-        context={"scenario_id": scenario_id, "session_id": session.session_id},
+        context={
+            "script_id": script_id,
+            "email": session.email,
+            "session_id": session.session_id,
+        },
     )

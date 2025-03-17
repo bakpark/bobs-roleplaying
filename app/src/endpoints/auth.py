@@ -1,10 +1,17 @@
+import json
 import os
 from fastapi.responses import RedirectResponse
 import httpx
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
-from src.infra.session import create_session, cookie
+from src.infra.session import (
+    SessionData,
+    create_session,
+    cookie,
+    get_session_data,
+    refresh_session,
+)
 from util.logging import logger
 
 
@@ -92,3 +99,14 @@ async def auth_google_callback(code: str = None, error: str = None):
         redirect = RedirectResponse(url="/", status_code=302)
         cookie.attach_to_response(redirect, session_id)
         return redirect
+
+
+@router.post("/refresh")
+async def refresh(session_data: SessionData = Depends(get_session_data)):
+    session_id = await refresh_session(session_data.session_id, session_data.email)
+    response = Response(
+        content=json.dumps({"session_id": str(session_id)}),
+        media_type="application/json",
+    )
+    cookie.attach_to_response(response, session_id)
+    return response

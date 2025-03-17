@@ -70,16 +70,35 @@ async def get_script(script_id):
             (script_id,),
         )
         result = await cursor.fetchone()
-        return result[0] if result else None
+        if result is None:
+            return None
+        return {
+            "script_json": result[0],
+            "translated_json": result[1],
+            "translated_language": result[2],
+            "description": result[3],
+            "tags": result[4].split(",") if result[4] else [],
+        }
 
 
 async def get_script_list(email: str):
     async with aiosqlite.connect(DATABASE_URL) as db:
         cursor = await db.execute(
             """
-            SELECT * FROM script WHERE created_by = ?
+            SELECT script_id FROM script WHERE created_by = ?
         """,
-            (email),
+            [email],
         )
         result = await cursor.fetchall()
-        return result
+        return [row[0] for row in result]
+
+
+async def delete_script_by_email_and_script_id(email: str, script_id: int):
+    async with aiosqlite.connect(DATABASE_URL) as db:
+        await db.execute(
+            """
+            DELETE FROM script WHERE created_by = ? AND script_id = ?
+        """,
+            (email, script_id),
+        )
+        await db.commit()

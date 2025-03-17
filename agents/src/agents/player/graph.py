@@ -5,11 +5,13 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 from util.langchain import add_messages_with_logging, load_chat_model
-from util.logging import logger
 
 from agents.player.configuration import Configuration
-from agents.player.schema import (ExpectedUserResponse, MissionItem,
-                                  PlayerLlmResponseSchema)
+from agents.player.schema import (
+    ExpectedUserResponse,
+    MissionItem,
+    PlayerLlmResponseSchema,
+)
 
 
 class PlayerAgentState(TypedDict):
@@ -19,17 +21,16 @@ class PlayerAgentState(TypedDict):
     expected_response: List[ExpectedUserResponse]
 
 
-def call_model(state: PlayerAgentState, config: RunnableConfig) -> Dict[str, Any]:
+async def call_model(state: PlayerAgentState, config: RunnableConfig) -> Dict[str, Any]:
     """Call the model with the given state and configuration."""
     configuration = Configuration.from_runnable_config(config)
     model = load_chat_model(configuration.model).with_structured_output(
         PlayerLlmResponseSchema
     )
 
-    logger.info(f"System prompt: {configuration.system_prompt}")
     response = cast(
         PlayerLlmResponseSchema,
-        model.invoke(
+        await model.ainvoke(
             [SystemMessage(content=configuration.system_prompt)] + state["messages"],
             config,
         ),

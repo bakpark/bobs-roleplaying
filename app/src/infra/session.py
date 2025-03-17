@@ -45,7 +45,14 @@ async def create_session(email: str) -> UUID:
     session_id = uuid4()
     session_data = SessionData(email=email, session_id=session_id)
     await backend.create(session_id=session_id, data=session_data)
+    logger.info(f"Session {session_id} created. email: {email}")
     return session_id
+
+
+async def refresh_session(session_id: UUID, email: str):
+    await backend.delete(session_id=session_id)
+    logger.info(f"Session {session_id} deleted. email: {email}")
+    return await create_session(email)
 
 
 async def delete_session(session_id: UUID):

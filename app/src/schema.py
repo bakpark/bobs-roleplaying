@@ -7,7 +7,6 @@ from pydantic import BaseModel
 
 class SimpleMessageRequest(BaseModel):
     message: str
-    session_id: str
 
 
 class TextRequest(BaseModel):
@@ -67,4 +66,5 @@ class PlayerResponse(BaseModel):
 class DirectorResponse(BaseModel):
     ok: bool
     content: str
+    keywords: list[str]
     script_id: Optional[int] = None

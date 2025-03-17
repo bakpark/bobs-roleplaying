@@ -1,6 +1,12 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 
-from src.service.acting_script_service import get_or_translate_script_info
+from util.logging import logger
+from src.infra.session import SessionData, get_session_data
+from src.service.script_service import (
+    get_or_translate_script_info,
+    get_user_scripts,
+    delete_script,
+)
 from src.service.audio_service import synthesize_text_to_speech
 
 router = APIRouter()
@@ -12,7 +18,24 @@ async def script_endpoint(script_id: str, language: str = "kr"):
     if script_info is None:
         return Response(status_code=404, content="Script not found")
 
-    return script_info
+    return {"content": script_info.to_script_message(), "script_info": script_info}
+
+
+@router.get("/brief-scripts")
+async def user_scripts_endpoint(
+    language: str = "kr",
+    session_data: SessionData = Depends(get_session_data),
+):
+    scripts = await get_user_scripts(session_data.email, language)
+    return {"scripts": scripts}
+
+
+@router.delete("/script/{script_id}")
+async def delete_script_endpoint(
+    script_id: int, session_data: SessionData = Depends(get_session_data)
+):
+    await delete_script(session_data.email, script_id)
+    return {"ok": True}
 
 
 @router.get("/tts")

@@ -21,7 +21,11 @@ app = FastAPI(lifespan=lifespan)
 
 # CORS 설정: 모든 Origin 허용 (필요에 따라 조정 가능)
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    allow_credentials=True,
 )
 
 # API 라우터 등록

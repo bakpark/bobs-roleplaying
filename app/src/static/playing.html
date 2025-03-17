@@ -539,6 +539,18 @@
             }
         }
     </style>
+    <script>
+        fetch("/auth/refresh", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+            });
+    </script>
 </head>
 
 <body>
@@ -981,19 +993,6 @@
             // Scroll chat to bottom
             function scrollToBottom() {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-
-            // Get random bot response
-            function getRandomResponse() {
-                const responses = [
-                    "어떻게 도와드릴까요?",
-                    "더 필요한 정보가 있으신가요?",
-                    "다른 질문이 있으시면 언제든지 물어보세요.",
-                    "그 질문에 대한 답변을 찾고 있습니다.",
-                    "좋은 질문이네요! 제가 도와드리겠습니다.",
-                    "더 자세한 내용이 필요하시면 알려주세요."
-                ];
-                return responses[Math.floor(Math.random() * responses.length)];
             }
 
             // Send request to player with timeout

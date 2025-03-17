@@ -50,7 +50,13 @@ def translate(state: TranslatorState) -> TranslatorState:
     else:
         output_schema = state["output_schema"]
         model_with_schema = model.with_structured_output(output_schema)
-        output = model_with_schema.invoke(prompt.format(text=user_input))
+        output = model_with_schema.invoke(
+            prompt.format(
+                text=user_input,
+                src_language=state["src_language"],
+                dist_language=state["dist_language"],
+            )
+        )
 
     # 번역된 결과를 직접 반환
     return {"output": output}

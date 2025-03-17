@@ -134,6 +134,7 @@
 
         .user-message-wrapper {
             display: flex;
+            margin-top: 10px;
             margin-bottom: 10px;
             align-self: flex-end;
             flex-direction: row-reverse;
@@ -174,6 +175,31 @@
 
         .keyword-btn:hover {
             background-color: #3a5a8a;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(74, 111, 165, 0.2);
+        }
+
+        .do-it-container {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 5px;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .do-it-btn {
+            background-color: #0185ff;
+            color: white;
+            border: 1px solid #0185ff;
+            border-radius: 24px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 22px;
+            font-weight: 1000;
+        }
+
+        .do-it-btn:hover {
+            background-color: #003cff;
             transform: translateY(-2px);
             box-shadow: 0 2px 8px rgba(74, 111, 165, 0.2);
         }
@@ -252,6 +278,48 @@
             margin-right: 5px;
         }
 
+
+        /* 타이핑 표시기 스타일 */
+        .typing-indicator {
+            display: flex;
+            padding: 10px 15px;
+            background-color: #f1f3f6;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #7f8c8d;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            animation: typing 1.3s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
         /* 반응형 디자인 */
         @media (max-width: 768px) {
             body {
@@ -270,6 +338,18 @@
             }
         }
     </style>
+    <script>
+        fetch("/auth/refresh", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        }).then(response => response.json())
+            .then(data => {
+                console.log(data);
+            });
+    </script>
 </head>
 
 <body>
@@ -302,33 +382,17 @@
     </div>
 
     <script>
-        // 샘플 시나리오 데이터
-        const samplescenarios = [
-            { id: 1, name: "김민준", age: 28, job: "개발자", hobby: "독서", summary: "안드로이드 개발자, 독서와 여행을 좋아합니다.", tags: ["일상적인", "소설 주인공", "면접 인터뷰"] },
-            { id: 2, name: "이지은", age: 24, job: "디자이너", hobby: "그림", summary: "UI/UX 디자이너, 취미는 그림 그리기입니다.", tags: ["디자인", "그림", "예술"] },
-            { id: 3, name: "박준호", age: 32, job: "마케터", hobby: "캠핑", summary: "디지털 마케팅 전문가, 주말에는 항상 캠핑을 갑니다.", tags: ["마케팅", "캠핑", "여행"] },
-            { id: 4, name: "최서연", age: 26, job: "교사", hobby: "요리", summary: "초등학교 교사, 요리 유튜브 채널을 운영하고 있습니다.", tags: ["교사", "요리", "교육"] },
-            { id: 5, name: "정현우", age: 30, job: "의사", hobby: "테니스", summary: "가정의학과 의사, 테니스를 전문적으로 배우고 있습니다.", tags: ["의사", "테니스", "운동"] }
-        ];
+        const email = "{{email}}";
 
-        // 대화 시나리오
-        const chatScenario = [
+        const initialChat = [
             {
                 question: "안녕하세요! 어떤 시나리오를 만들어 볼까요?",
-                keywords: ["일상적인", "소설 주인공", "면접 인터뷰", "직접 입력하기"]
+                keywords: ["일상적인", "소설 주인공", "면접 인터뷰", "마음대로 만들어줘"]
             }
         ];
 
         // 현재 대화 단계와 사용자 정보를 저장할 변수
         let currentStep = 0;
-        let userscenario = {
-            name: "",
-            age: "",
-            job: "",
-            hobby: "",
-            hobbyDetail: "",
-            selfDescription: ""
-        };
 
         // DOM 요소
         const chatArea = document.getElementById("chatArea");
@@ -339,31 +403,40 @@
         // 시나리오 목록 렌더링
         function renderscenarioList() {
             scenarioList.innerHTML = "";
-            samplescenarios.forEach(scenario => {
-                const scenarioItem = document.createElement("div");
-                scenarioItem.className = "scenario-item";
-                scenarioItem.innerHTML = `
-                    <div class="scenario-item-header">
-                        <div class="scenario-name">${scenario.name}</div>
-                        <button class="icon-button" onclick="deleteAction(event, ${scenario.id})">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" fill="none">
-                                <!-- 원형 배경 -->
-                                <circle cx="20" cy="20" r="18" fill="white" stroke="#4a6fa5" stroke-width="2"/>
-                                <!-- X 아이콘 -->
-                                <path d="M14 14l12 12M26 14l-12 12" stroke="#4a6fa5" stroke-width="2.5" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="scenario-summary">${scenario.summary}</div>
-                    <div>
-                        ${scenario.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                    </div>
-                `;
-                scenarioItem.addEventListener("click", () => {
-                    alert(`${scenario.name}님의 시나리오이 선택되었습니다. 대화가 종료됩니다.`);
+            fetch(`/api/brief-scripts`, {
+                credentials: "include",
+                params: {
+                    language: "kr"
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    data.scripts.forEach(scenario => {
+                        const scenarioItem = document.createElement("div");
+                        scenarioItem.className = "scenario-item";
+                        scenarioItem.innerHTML = `
+                            <div class="scenario-item-header">
+                                <div class="scenario-name">${scenario.title}</div>
+                                <button class="icon-button" onclick="deleteScript(event, ${scenario.script_id})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40" fill="none">
+                                        <!-- 원형 배경 -->
+                                        <circle cx="20" cy="20" r="18" fill="white" stroke="#4a6fa5" stroke-width="2"/>
+                                        <!-- X 아이콘 -->
+                                        <path d="M14 14l12 12M26 14l-12 12" stroke="#4a6fa5" stroke-width="2.5" stroke-linecap="round"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="scenario-summary">${scenario.description}</div>
+                            <div>
+                                ${scenario.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            </div>
+                        `;
+                        scenarioItem.addEventListener("click", () => {
+                            location.href = `/script/${scenario.script_id}`;
+                        });
+                        scenarioList.appendChild(scenarioItem);
+                    });
                 });
-                scenarioList.appendChild(scenarioItem);
-            });
         }
 
         // 메시지를 채팅창에 추가
@@ -375,7 +448,7 @@
             avatar.textContent = isUser ? 'U' : 'B';
             const messageDiv = document.createElement("div");
             messageDiv.className = `message ${isUser ? "user-message" : "bot-message"}`;
-            messageDiv.textContent = text;
+            messageDiv.innerHTML = text.replace(/\n/g, '<br>');
             messageWrapper.appendChild(avatar);
             messageWrapper.appendChild(messageDiv);
             chatArea.appendChild(messageWrapper);
@@ -415,107 +488,85 @@
             // 사용자 메시지 표시
             addMessage(text, true);
 
-            // 현재 단계에 따라 사용자 정보 저장
-            switch (currentStep) {
-                case 0:
-                    userscenario.name = text;
-                    break;
-                case 1:
-                    userscenario.age = text;
-                    break;
-                case 2:
-                    userscenario.job = text;
-                    break;
-                case 3:
-                    userscenario.hobby = text;
-                    break;
-                case 4:
-                    userscenario.hobbyDetail = text;
-                    break;
-                case 5:
-                    userscenario.selfDescription = text;
-                    break;
-                case 6:
-                    if (text === "확인하기") {
-                        showscenarioSummary();
-                        return;
-                    } else if (text === "다시 작성하기") {
-                        resetChat();
-                        return;
-                    }
-                    break;
-            }
-
             // 다음 단계로 이동
             currentStep++;
-            if (currentStep < chatScenario.length) {
-                setTimeout(() => {
-                    nextQuestion();
-                }, 800);
-            }
+
+            nextQuestion(text);
         }
 
         // 다음 질문 표시
-        function nextQuestion() {
-            let question = chatScenario[currentStep].question;
-
-            // 변수 치환
-            question = question.replace("{name}", userscenario.name)
-                .replace("{age}", userscenario.age)
-                .replace("{job}", userscenario.job)
-                .replace("{hobby}", userscenario.hobby);
-
-            addMessage(question);
-            addKeywords(chatScenario[currentStep].keywords);
+        function nextQuestion(message) {
+            console.log("nextQuestion message: ", message);
+            showTypingIndicator();
+            fetch(`/agents/director`, {
+                method: "POST",
+                credentials: "include",
+                body: JSON.stringify({
+                    message: message
+                }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    addMessage(data.content);
+                    if (data.script_id) {
+                        getScriptInfo(data.script_id);
+                    } else if (data.keywords) {
+                        data.keywords.push("바로 만들기")
+                        addKeywords(data.keywords);
+                        hideTypingIndicator();
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    hideTypingIndicator();
+                });
         }
 
-        // 시나리오 요약 표시
-        function showscenarioSummary() {
-            const summary = `
-    이름: ${userscenario.name}
-    나이: ${userscenario.age}
-    직업: ${userscenario.job}
-    취미: ${userscenario.hobby}
-    취미 세부사항: ${userscenario.hobbyDetail}
-    자기 표현: ${userscenario.selfDescription}
-`;
-
-            addMessage("시나리오이 완성되었습니다!");
-            addMessage(summary);
-
-            // 새 시나리오 추가 (실제로는 여기서 서버에 데이터를 저장할 것입니다)
-            const newscenario = {
-                id: samplescenarios.length + 1,
-                name: userscenario.name,
-                age: userscenario.age,
-                job: userscenario.job,
-                hobby: userscenario.hobby,
-                summary: `${userscenario.job}, ${userscenario.selfDescription}`
-            };
-
-            samplescenarios.push(newscenario);
-            renderscenarioList();
+        function getScriptInfo(script_id) {
+            hideTypingIndicator();
+            addTranslateIndicator();
+            fetch(`/api/script/${script_id}?language=kr`, {
+                credentials: "include",
+            }).then(response => response.json())
+                .then(data => {
+                    addMessage(data.content);
+                    addDoItBtn(script_id);
+                    hideTypingIndicator();
+                    renderscenarioList();
+                })
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    hideTypingIndicator();
+                });
         }
 
-        // 대화 초기화
-        function resetChat() {
-            currentStep = 0;
-            userscenario = {
-                name: "",
-                age: "",
-                job: "",
-                hobby: "",
-                hobbyDetail: "",
-                selfDescription: ""
-            };
-
-            chatArea.innerHTML = "";
-            startChat();
+        function addDoItBtn(script_id) {
+            const container = document.createElement("div");
+            container.className = "do-it-container";
+            const doItBtn = document.createElement("button");
+            doItBtn.className = "do-it-btn";
+            doItBtn.textContent = "시나리오 입장 하기";
+            doItBtn.addEventListener("click", () => {
+                location.href = `/script/${script_id}`;
+            });
+            container.appendChild(doItBtn);
+            chatArea.appendChild(container);
         }
 
-        function deleteScienario(event, id) {
+        function deleteScript(event, id) {
             event.stopPropagation();
-            console.log(id);
+            fetch(`/api/script/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            }).then(response => response.json())
+                .then(data => {
+                    renderscenarioList();
+                })
+                .catch(error => {
+                    console.error("Error deleting script:", error);
+                });
         }
 
         // 입력 이벤트 처리
@@ -537,8 +588,34 @@
 
         // 대화 시작
         function startChat() {
-            addMessage(chatScenario[0].question);
-            addKeywords(chatScenario[0].keywords);
+            addMessage(initialChat[0].question);
+            addKeywords(initialChat[0].keywords);
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function addTranslateIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'typing-indicator';
+            typingDiv.innerHTML = '번역중  <span></span><span></span><span></span>';
+            chatArea.appendChild(typingDiv);
         }
 
         // 초기화

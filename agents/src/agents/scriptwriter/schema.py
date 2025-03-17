@@ -4,49 +4,48 @@ from pydantic import BaseModel, Field
 
 
 class UserMission(BaseModel):
-    main: str
-    sub: str
-    hidden: str
+    main: str = Field(
+        ...,
+        description="The mission when completed, concludes the scenario (include clear completion conditions)",
+    )
+    sub: str = Field(
+        ...,
+        description="The mission that can be achieved through specific actions or dialogue choices",
+    )
+    hidden: str = Field(
+        ...,
+        description="The mission that can be related to the sub mission",
+    )
 
 
 class ActingScriptSchema(BaseModel):
-    situation: str
-    assistant_actor_role: str
-    user_role: str
-    user_missions: UserMission
+    situation: str = Field(..., description="The situation of the scenario")
+    assistant_actor_role: str = Field(
+        ..., description="The role and instructions of the ai assistant."
+    )
+    user_role: str = Field(..., description="The role of the user")
+    user_missions: UserMission = Field(
+        ..., description="The missions of the user through the scenario"
+    )
 
     def from_json_string(json_string: str) -> "ActingScriptSchema":
         return ActingScriptSchema(**json.loads(json_string))
 
     def to_script_message(self) -> str:
-        return f"""
-[FINAL OUTPUT]
-[Situation]
+        return f"""[Situation]
 {self.situation}
-[Assistant Actor Role]
-{self.assistant_actor_role}
-[User Role]
+
+[Your Role]
 {self.user_role}
-[User Missions]
+
+[Bob Role]
+{self.assistant_actor_role}
+
+[Your Missions]
 main: {self.user_missions.main}
 sub: {self.user_missions.sub}
 hidden: {self.user_missions.hidden}
     """
-
-
-class ScriptInfoSchema(BaseModel):
-    script: ActingScriptSchema = Field(
-        ...,
-        description="The script of the scenario. In translated language.",
-    )
-    description: str = Field(
-        ...,
-        description="The description of the script. In translated language. It should be 2 sentences.",
-    )
-    tags: list[str] = Field(
-        ...,
-        description="The tags of the script. In translated language. It should be 3 tags.",
-    )
 
 
 # Sample params

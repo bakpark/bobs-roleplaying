@@ -10,6 +10,7 @@ from agents.scriptwriter.schema import ActingScriptSchema
 intent_literal = Literal[
     "Answer",
     "Stop",
+    "Just do it",
     "Acceptance [FINAL OUTPUT]",
 ]
 

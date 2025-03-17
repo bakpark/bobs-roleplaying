@@ -18,9 +18,9 @@ from agents.scriptwriter.schema import ActingScriptSchema
 model = ChatOpenAI(model="gpt-4o-mini", temperature=1.2)
 
 
-def classify_intent(state: DirectorState):
+async def classify_intent(state: DirectorState):
     logger.info("> Classify intent START")
-    response = model.with_structured_output(IntentLlmResponse).invoke(
+    response = await model.with_structured_output(IntentLlmResponse).ainvoke(
         input=[
             SystemMessage(content=system_prompt["intent"]["v1"]),
             AIMessage(content=state["messages"][-2].content),
@@ -32,9 +32,9 @@ def classify_intent(state: DirectorState):
     return state
 
 
-def question(state: DirectorState):
+async def question(state: DirectorState):
     logger.info("> Question START")
-    response = model.with_structured_output(QuestionLlmResponse).invoke(
+    response = await model.with_structured_output(QuestionLlmResponse).ainvoke(
         input=[SystemMessage(content=system_prompt["question"]["v1"])]
         + state["messages"],
     )
@@ -63,8 +63,11 @@ async def script(state: DirectorState, config: RunnableConfig):
 
 def route_to_next_node(state: DirectorState) -> str:
     logger.info(f">> Route to next node START intent: {state['user_intent']}")
-    if state["user_intent"] == "Acceptance [FINAL OUTPUT]":
-        if state["script"]:
+    if (
+        state["user_intent"] == "Acceptance [FINAL OUTPUT]"
+        or state["user_intent"] == "Just do it"
+    ):
+        if state.get("script"):
             logger.info(f">> Route to next node FINAL SCRIPT: {state['script']}")
             return "END"
         else:
