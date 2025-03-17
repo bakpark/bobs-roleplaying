@@ -7,41 +7,46 @@ from agents.scriptwriter.schema import ActingScriptSchema
 from langchain.schema import HumanMessage
 from src.schema import DirectorResponse, PlayerResponse
 from src.translation import toKorean
-from src.infra.db import insert_acting_script, get_acting_script
+from src.infra.db import insert_script, get_script
 from src.infra.checkpointer import async_saver
-
+from src.infra.session import SessionData
 
 director_agent = create_director_agent(checkpointer=async_saver)
 player_agent = create_player_agent(checkpointer=async_saver)
 
 
-async def direct(scenario_id: str, message: str, session_id: str) -> DirectorResponse:
+async def direct(message: str, session_data: SessionData) -> DirectorResponse:
     response: DirectorState = await director_agent.ainvoke(
         {"messages": [HumanMessage(content=message)]},
-        config={"configurable": {"thread_id": session_id}},
+        config={"configurable": {"thread_id": session_data.session_id}},
     )
 
     end = response["user_intent"] in ["Acceptance [FINAL OUTPUT]", "Stop"]
+    script_id = None
     if end:
         acting_script = response["script"]
-        await insert_acting_script(scenario_id, acting_script.model_dump_json())
+        script_id = await insert_script(
+            acting_script.model_dump_json(), session_data.email
+        )
 
     assistant_message = response["messages"][-1].content
-    return DirectorResponse(ok=True, content=assistant_message, end=end)
+    return DirectorResponse(ok=True, content=assistant_message, script_id=script_id)
 
 
-async def play(scenario_id: str, message: str, session_id: str) -> PlayerResponse:
-    json_string = await get_acting_script(scenario_id)
-    if json_string is None:
+async def play(
+    script_id: str, message: str, session_data: SessionData
+) -> PlayerResponse:
+    script_info = await get_script(script_id)
+    if script_info is None:
         return {"ok": False, "message": "No acting script found"}
-    acting_script = ActingScriptSchema.from_json_string(json_string)
+    acting_script = ActingScriptSchema.from_json_string(script_info["script_json"])
     player_system_prompt = get_player_system_prompt(acting_script)
 
     response = await player_agent.ainvoke(
         input={"messages": [HumanMessage(content=message)]},
         config={
             "configurable": {
-                "thread_id": session_id,
+                "thread_id": session_data.session_id,
                 "model": "openai/gpt-4o-mini",
                 "system_prompt": player_system_prompt,
             }

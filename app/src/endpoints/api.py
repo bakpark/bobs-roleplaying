@@ -1,20 +1,18 @@
-from agents.scriptwriter.schema import ActingScriptSchema
 from fastapi import APIRouter, Response
 
-from src.schema import ScenarioScriptResponse
-from src.service.acting_script_service import get_or_translate_acting_script
+from src.service.acting_script_service import get_or_translate_script_info
 from src.service.audio_service import synthesize_text_to_speech
 
 router = APIRouter()
 
 
-@router.get("/scenario/{scenario_id}/script")
-async def script_endpoint(scenario_id: str, language: str = "kr"):
-    acting_script: ActingScriptSchema = await get_or_translate_acting_script(
-        scenario_id, language
-    )
+@router.get("/script/{script_id}")
+async def script_endpoint(script_id: str, language: str = "kr"):
+    script_info = await get_or_translate_script_info(script_id, language)
+    if script_info is None:
+        return Response(status_code=404, content="Script not found")
 
-    return ScenarioScriptResponse.from_acting_script(acting_script)
+    return script_info
 
 
 @router.get("/tts")

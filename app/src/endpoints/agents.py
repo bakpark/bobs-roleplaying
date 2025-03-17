@@ -1,7 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from src.infra.session import SessionData, get_session_data
 from src.service import agent_service
 from src.schema import (
-    DirectorMessageRequest,
     PlayerResponse,
     SimpleMessageRequest,
     DirectorResponse,
@@ -12,19 +12,20 @@ router = APIRouter()
 
 @router.post("/director")
 async def director_endpoint(
-    message_request: DirectorMessageRequest,
+    message_request: SimpleMessageRequest,
+    session_data: SessionData = Depends(get_session_data),
 ) -> DirectorResponse:
-    response = await agent_service.direct(
-        message_request.scenario_id, message_request.message, message_request.session_id
-    )
+    response = await agent_service.direct(message_request.message, session_data)
     return response
 
 
-@router.post("/scenario/{scenario_id}/player")
+@router.post("/script/{script_id}/player")
 async def player_endpoint(
-    scenario_id: str, message_request: SimpleMessageRequest
+    script_id: str,
+    message_request: SimpleMessageRequest,
+    session_data: SessionData = Depends(get_session_data),
 ) -> PlayerResponse:
     response = await agent_service.play(
-        scenario_id, message_request.message, message_request.session_id
+        script_id, message_request.message, session_data
     )
     return response

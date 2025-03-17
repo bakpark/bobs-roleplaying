@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 from agents.player.schema import MissionItem
 from agents.scriptwriter.schema import ActingScriptSchema
@@ -8,10 +8,6 @@ from pydantic import BaseModel
 class SimpleMessageRequest(BaseModel):
     message: str
     session_id: str
-
-
-class DirectorMessageRequest(SimpleMessageRequest):
-    scenario_id: str
 
 
 class TextRequest(BaseModel):
@@ -71,4 +67,4 @@ class PlayerResponse(BaseModel):
 class DirectorResponse(BaseModel):
     ok: bool
     content: str
-    end: bool
+    script_id: Optional[int] = None

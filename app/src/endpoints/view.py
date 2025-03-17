@@ -1,10 +1,8 @@
 from typing import Optional
-from uuid import UUID
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from src.infra.session import SessionData, delete_session, get_session_data
-from util.logging import logger
 
 router = APIRouter()
 
@@ -18,7 +16,7 @@ async def get_index(
     if session:
         return templates.TemplateResponse(
             request=request,
-            name="index.html",
+            name="directing.html",
             context={"email": session.email, "session_id": session.session_id},
         )
 
@@ -38,7 +36,7 @@ async def get_logout(session: Optional[SessionData] = Depends(get_session_data))
     return RedirectResponse(url="/login")
 
 
-@router.get("/scenario/{scenario_id}/play")
+@router.get("/scenario/{scenario_id}")
 async def get_play(
     request: Request,
     scenario_id: str,
@@ -48,6 +46,6 @@ async def get_play(
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
         request=request,
-        name="play.html",
+        name="playing.html",
         context={"scenario_id": scenario_id, "session_id": session.session_id},
     )

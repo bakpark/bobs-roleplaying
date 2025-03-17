@@ -1,6 +1,6 @@
 import json
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class UserMission(BaseModel):
@@ -32,6 +32,21 @@ main: {self.user_missions.main}
 sub: {self.user_missions.sub}
 hidden: {self.user_missions.hidden}
     """
+
+
+class ScriptInfoSchema(BaseModel):
+    script: ActingScriptSchema = Field(
+        ...,
+        description="The script of the scenario. In translated language.",
+    )
+    description: str = Field(
+        ...,
+        description="The description of the script. In translated language. It should be 2 sentences.",
+    )
+    tags: list[str] = Field(
+        ...,
+        description="The tags of the script. In translated language. It should be 3 tags.",
+    )
 
 
 # Sample params
