@@ -24,17 +24,19 @@ class Mission(BaseModel):
     description: str
 
 
-class UserDirectingResponse(BaseModel):
+class ScenarioScriptResponse(BaseModel):
+    ok: bool
     user_role: str
     assistant_role: str
     situation: str
     missions: list[Mission]
 
     @staticmethod
-    async def from_acting_script(
+    def from_acting_script(
         acting_script: ActingScriptSchema,
-    ) -> "UserDirectingResponse":
-        return UserDirectingResponse(
+    ) -> "ScenarioScriptResponse":
+        return ScenarioScriptResponse(
+            ok=True,
             user_role=acting_script.user_role,
             assistant_role=acting_script.assistant_actor_role,
             situation=acting_script.situation,
@@ -58,9 +60,15 @@ class UserDirectingResponse(BaseModel):
         )
 
 
-class PlayerActingResponse(BaseModel):
+class PlayerResponse(BaseModel):
     ok: bool
     content: str
     missions: list[MissionItem]
     action: str
     suggestions: list[dict[str, Any]]
+
+
+class DirectorResponse(BaseModel):
+    ok: bool
+    content: str
+    end: bool

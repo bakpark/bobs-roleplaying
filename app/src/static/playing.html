@@ -658,7 +658,7 @@
             const placeholderConversations = [
                 {
                     sender: 'bot',
-                    content: '안녕하세요! 시나리오를 먼저 만들어주세요.',
+                    content: '(상황에 맞게 대화를 시작 해주세요.)',
                     time: getCurrentTime()
                 }
             ];
@@ -686,9 +686,26 @@
 
             // Initialize chat with sample messages
             function initializeChat() {
-                placeholderConversations.forEach(msg => {
-                    addMessage(msg.sender, msg.content, msg.time);
-                });
+                // Show typing indicator
+                showTypingIndicator();
+
+                // Send request to server with timeout
+                sendPlayerRequest("Hi.", sessionId)
+                    .then(response => {
+                        hideTypingIndicator();
+                        if (!response.ok) {
+                            throw new Error(response.message);
+                        }
+                        addMessage('bot', response.content, getCurrentTime());
+                        changeSuggestions(response.suggestions);
+                        // TTS 재생
+                        playTTS(response.content);
+                    })
+                    .catch(error => {
+                        hideTypingIndicator();
+                        console.error('Error:', error);
+                        addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
+                    });
             }
 
             // Initialize scenario panel

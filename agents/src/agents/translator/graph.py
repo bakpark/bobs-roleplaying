@@ -12,7 +12,7 @@ prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a translator. Just translate the following text from English to Korean.",
+            "You are a professional translator. Just translate the following text from {src_language} to {dist_language}.",
         ),
         ("user", "{text}"),
     ]
@@ -23,6 +23,8 @@ class TranslatorState(TypedDict):
     original: Union[BaseModel, str]
     output_schema: Type[BaseModel]
     output: Union[BaseModel, str]
+    src_language: str
+    dist_language: str
 
 
 def translate(state: TranslatorState) -> TranslatorState:

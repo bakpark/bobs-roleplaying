@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from util.langchain import AgentState
 
 from agents.director.prompt import system_prompt
+from agents.scriptwriter.schema import ActingScriptSchema
 
 intent_literal = Literal[
     "Answer",
@@ -23,7 +24,7 @@ class Question(BaseModel):
 
 class DirectorState(AgentState):
     user_intent: Optional[intent_literal] = None
-    script: Optional[str] = None
+    script: Optional[ActingScriptSchema] = None
     question: Optional[Question] = None
 
     @staticmethod

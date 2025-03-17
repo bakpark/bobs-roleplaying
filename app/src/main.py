@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from src.db import init_db
-from src.endpoints import agents, api
+from src.infra.db import init_db
+from src.endpoints import agents, api, auth, view
 
 load_dotenv()
 
@@ -27,5 +27,7 @@ app.add_middleware(
 # API 라우터 등록
 app.include_router(agents.router, prefix="/agents", tags=["Agents"])
 app.include_router(api.router, prefix="/api", tags=["API"])
+app.include_router(auth.router, prefix="/auth", tags=["Auth"])
+app.include_router(view.router, prefix="", tags=["View"])
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", StaticFiles(directory="static", html=False), name="static")
