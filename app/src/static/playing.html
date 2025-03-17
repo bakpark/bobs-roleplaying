@@ -539,19 +539,6 @@
             }
         }
     </style>
-    <script>
-        fetch("/auth/refresh", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        }).then(response => response.json())
-            .then(data => {
-                console.log(data);
-            });
-    </script>
-</head>
 
 <body>
     <header class="header">
@@ -643,9 +630,26 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const sessionId = "demo-" + Math.random().toString(36).substring(2, 15);
-            const scenarioId = "scenario-7";
+        document.addEventListener('DOMContentLoaded', refreshSession)
+
+        async function refreshSession() {
+            try {
+                const response = await fetch("/auth/refresh", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+                initialize();
+            } catch (error) {
+                console.error("Error refreshing session:", error);
+            }
+        }
+
+        function initialize() {
+            const sessionId = "{{session_id}}";
+            const scriptId = "{{script_id}}";
 
             // DOM Elements
             const chatMessages = document.getElementById('chatMessages');
@@ -663,15 +667,6 @@
                     title: "Make your own scenario",
                     src: "/placeholder.jpg",
                     description: ""
-                }
-            ];
-
-            // Placeholder conversations
-            const placeholderConversations = [
-                {
-                    sender: 'bot',
-                    content: '(상황에 맞게 대화를 시작 해주세요.)',
-                    time: getCurrentTime()
                 }
             ];
 
@@ -702,7 +697,7 @@
                 showTypingIndicator();
 
                 // Send request to server with timeout
-                sendPlayerRequest("Hi.", sessionId)
+                sendPlayerRequest("Hi.")
                     .then(response => {
                         hideTypingIndicator();
                         if (!response.ok) {
@@ -726,8 +721,10 @@
                 scenarioList.innerHTML = '';
 
                 // 시나리오 데이터 가져오기
-                fetchDirecting(sessionId)
-                    .then(directing => {
+                fetch(`/api/script/${scriptId}/directing?language=kr`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const directing = data.directing;
                         const situationCard = document.createElement('div');
                         situationCard.className = 'scenario-card';
                         situationCard.innerHTML = `
@@ -996,13 +993,13 @@
             }
 
             // Send request to player with timeout
-            async function sendPlayerRequest(message, sessionId) {
+            async function sendPlayerRequest(message) {
                 const timeout = 30000; // 30초 타임아웃
                 const controller = new AbortController();
                 const id = setTimeout(() => controller.abort(), timeout);
 
                 try {
-                    const response = await fetch(`/agents/scenario/${scenarioId}/player`, {
+                    const response = await fetch(`/agents/script/${scriptId}/player`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1047,9 +1044,9 @@
                     });
             }
 
-            async function fetchDirecting(sessionId) {
+            async function fetchDirecting() {
                 try {
-                    const response = await fetch(`/api/scenario/${scenarioId}/directing`);
+                    const response = await fetch(`/api/script/${scriptId}?language=kr`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
@@ -1057,7 +1054,6 @@
                     if (!data.ok) {
                         throw new Error(data.message || '시나리오를 불러오는데 실패했습니다.');
                     }
-                    console.log(data);
                     return data.response;
                 } catch (error) {
                     console.error('Error fetching scenario:', error);
@@ -1065,7 +1061,7 @@
                 }
             }
 
-        });
+        };
     </script>
 </body>
 

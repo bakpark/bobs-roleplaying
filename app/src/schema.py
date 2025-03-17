@@ -19,7 +19,7 @@ class Mission(BaseModel):
     description: str
 
 
-class ScenarioScriptResponse(BaseModel):
+class DirectingScriptResponse(BaseModel):
     ok: bool
     user_role: str
     assistant_role: str
@@ -29,8 +29,8 @@ class ScenarioScriptResponse(BaseModel):
     @staticmethod
     def from_acting_script(
         acting_script: ActingScriptSchema,
-    ) -> "ScenarioScriptResponse":
-        return ScenarioScriptResponse(
+    ) -> "DirectingScriptResponse":
+        return DirectingScriptResponse(
             ok=True,
             user_role=acting_script.user_role,
             assistant_role=acting_script.assistant_actor_role,

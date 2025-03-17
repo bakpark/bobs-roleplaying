@@ -8,17 +8,28 @@ from src.service.script_service import (
     delete_script,
 )
 from src.service.audio_service import synthesize_text_to_speech
+from agents.scriptwriter.schema import ActingScriptSchema
+from src.schema import DirectingScriptResponse
 
 router = APIRouter()
 
 
-@router.get("/script/{script_id}")
-async def script_endpoint(script_id: str, language: str = "kr"):
+@router.get("/script/{script_id}/message")
+async def script_message_endpoint(script_id: str, language: str = "kr"):
     script_info = await get_or_translate_script_info(script_id, language)
     if script_info is None:
         return Response(status_code=404, content="Script not found")
 
-    return {"content": script_info.to_script_message(), "script_info": script_info}
+    return {"content": script_info.to_script_message()}
+
+
+@router.get("/script/{script_id}/directing")
+async def script_directing_endpoint(script_id: str, language: str = "kr"):
+    script_info = await get_or_translate_script_info(script_id, language)
+    if script_info is None:
+        return Response(status_code=404, content="Script not found")
+
+    return {"directing": DirectingScriptResponse.from_acting_script(script_info.script)}
 
 
 @router.get("/brief-scripts")

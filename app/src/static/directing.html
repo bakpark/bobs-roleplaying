@@ -338,18 +338,6 @@
             }
         }
     </style>
-    <script>
-        fetch("/auth/refresh", {
-            method: "POST",
-            credentials: "include",
-            headers: {
-                "Content-Type": "application/json"
-            }
-        }).then(response => response.json())
-            .then(data => {
-                console.log(data);
-            });
-    </script>
 </head>
 
 <body>
@@ -511,7 +499,7 @@
                 .then(data => {
                     addMessage(data.content);
                     if (data.script_id) {
-                        getScriptInfo(data.script_id);
+                        getScriptMessage(data.script_id);
                     } else if (data.keywords) {
                         data.keywords.push("바로 만들기")
                         addKeywords(data.keywords);
@@ -524,10 +512,10 @@
                 });
         }
 
-        function getScriptInfo(script_id) {
+        function getScriptMessage(script_id) {
             hideTypingIndicator();
             addTranslateIndicator();
-            fetch(`/api/script/${script_id}?language=kr`, {
+            fetch(`/api/script/${script_id}/message?language=kr`, {
                 credentials: "include",
             }).then(response => response.json())
                 .then(data => {
@@ -618,11 +606,28 @@
             chatArea.appendChild(typingDiv);
         }
 
-        // 초기화
-        window.onload = function () {
+        async function refreshSession() {
+            try {
+                const response = await fetch("/auth/refresh", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+                initialize();
+            } catch (error) {
+                console.error("Error refreshing session:", error);
+            }
+        }
+
+        function initialize() {
             renderscenarioList();
             startChat();
-        };
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', refreshSession);
     </script>
 </body>
 
