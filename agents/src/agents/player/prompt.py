@@ -10,8 +10,9 @@ ROLE-PLAYING FRAMEWORK: INTERACTIVE SCENARIO SIMULATION
 
 [SCENARIO CONFIGURATION]
 Situation: {{situation}}
-Your Role: {{assistant_actor_role}}
-User Role: {{user_role}}
+Your Character: {{assistant_actor_character}}
+Your Instructions: {{assistant_actor_instructions}}
+User Character: {{user_character}}
 User Missions: 
 - main: {{main_mission}}
 - sub: {{sub_mission}}
@@ -48,8 +49,9 @@ Remain fully immersed in your character throughout the entire interaction. The s
 def get_player_system_prompt(params: ActingScriptSchema) -> str:
     return system_prompt_template.format(
         situation=params.situation,
-        assistant_actor_role=params.assistant_actor_role,
-        user_role=params.user_role,
+        assistant_actor_character=params.assistant_actor_role,
+        assistant_actor_instructions=params.assistant_actor_instructions,
+        user_character=params.user_role,
         main_mission=params.user_missions.main,
         sub_mission=params.user_missions.sub,
         hidden_mission=params.user_missions.hidden,

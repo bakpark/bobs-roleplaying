@@ -4,15 +4,9 @@ from langchain_core.messages import AIMessage
 from pydantic import BaseModel, Field
 from util.langchain import AgentState
 
-from agents.director.prompt import system_prompt
 from agents.scriptwriter.schema import ActingScriptSchema
 
-intent_literal = Literal[
-    "Answer",
-    "Stop",
-    "Just do it",
-    "Acceptance [FINAL OUTPUT]",
-]
+intention_literal = Literal["RESPOND", "REVISION", "INSTRUCTION", "STOP", "SKIP"]
 
 
 class Question(BaseModel):
@@ -24,7 +18,8 @@ class Question(BaseModel):
 
 
 class DirectorState(AgentState):
-    user_intent: Optional[intent_literal] = None
+    done: bool = False
+    intention: Optional[intention_literal] = None
     script: Optional[ActingScriptSchema] = None
     question: Optional[Question] = None
 
@@ -36,11 +31,22 @@ class DirectorState(AgentState):
             ],
         }
 
+    def is_include_script(self):
+        return self.script is not None
 
-class IntentLlmResponse(BaseModel):
-    intent: intent_literal = Field(
+
+class IntentionLlmResponse(BaseModel):
+    reasoning: str = Field(
         ...,
-        description="The intent of the user's last message.",
+        description="Brief explanation of why choose that.",
+    )
+    intention: intention_literal = Field(
+        ...,
+        description="The intention of the user's last message.",
+    )
+    confidence: int = Field(
+        ...,
+        description="1-10",
     )
 
 

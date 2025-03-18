@@ -1,0 +1,59 @@
+{
+    "v1": {
+        "name": "intention_response",
+        "strict": true,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "intention": {
+                    "type": "string",
+                    "description": "The intention of the user's last message.",
+                    "enum": [
+                        "REPLY",
+                        "REVISION",
+                        "STOP",
+                        "JUST_DO_IT"
+                    ]
+                }
+            },
+            "required": [
+                "intention"
+            ],
+            "additionalProperties": false
+        }
+    },
+    "v2": {
+        "name": "intention_response",
+        "strict": true,
+        "schema": {
+            "type": "object",
+            "properties": {
+                "reasoning": {
+                    "type": "string",
+                    "description": "Brief explanation of why choose that."
+                },
+                "intention": {
+                    "type": "string",
+                    "description": "The intention of the user's last message.",
+                    "enum": [
+                        "RESPOND",
+                        "REVISION",
+                        "INSTRUCTION",
+                        "STOP",
+                        "SKIP"
+                    ]
+                },
+                "confidence": {
+                    "type": "integer",
+                    "description": "1-10"
+                }
+            },
+            "required": [
+                "reasoning",
+                "intention",
+                "confidence"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -8,7 +8,7 @@ from util.logging import logger
 from agents.director.prompt import system_prompt
 from agents.director.schema.schema import (
     DirectorState,
-    IntentLlmResponse,
+    IntentionLlmResponse,
     Question,
     QuestionLlmResponse,
 )
@@ -18,24 +18,24 @@ from agents.scriptwriter.schema import ActingScriptSchema
 model = ChatOpenAI(model="gpt-4o-mini", temperature=1.2)
 
 
-async def classify_intent(state: DirectorState):
-    logger.info("> Classify intent START")
-    response = await model.with_structured_output(IntentLlmResponse).ainvoke(
+async def classify_intention(state: DirectorState):
+    logger.info("> Classify intention START")
+    response = await model.with_structured_output(IntentionLlmResponse).ainvoke(
         input=[
-            SystemMessage(content=system_prompt["intent"]["v1"]),
+            SystemMessage(content=system_prompt["intention"]["v3"]),
             AIMessage(content=state["messages"][-2].content),
             HumanMessage(content=state["messages"][-1].content),
         ]
     )
-    state["user_intent"] = response.intent
-    logger.info(f"> Classify intent END: {state['user_intent']}")
+    state["intention"] = response.intention
+    logger.info(f"> Classify intention END: {state['intention']}")
     return state
 
 
 async def question(state: DirectorState):
     logger.info("> Question START")
     response = await model.with_structured_output(QuestionLlmResponse).ainvoke(
-        input=[SystemMessage(content=system_prompt["question"]["v1"])]
+        input=[SystemMessage(content=system_prompt["question"]["v2"])]
         + state["messages"],
     )
     question: Question = response.question
@@ -44,6 +44,7 @@ async def question(state: DirectorState):
     return {
         "messages": [message],
         "question": question,
+        "done": False,
     }
 
 
@@ -58,25 +59,12 @@ async def script(state: DirectorState, config: RunnableConfig):
     )
     message = AIMessage(content=acting_script.to_script_message())
     logger.info(f"> Write script END: {message.content}")
-    return {"messages": [message], "script": acting_script}
+    return {"messages": [message], "script": acting_script, "done": True}
 
 
 def route_to_next_node(state: DirectorState) -> str:
-    logger.info(f">> Route to next node START intent: {state['user_intent']}")
-    if (
-        state["user_intent"] == "Acceptance [FINAL OUTPUT]"
-        or state["user_intent"] == "Just do it"
-    ):
-        if state.get("script"):
-            logger.info(f">> FINAL SCRIPT: {state['script']}")
-            return "END"
-        else:
-            logger.info(">> Route to next node: script_agent")
-            return "script_agent"
-    if (
-        state["user_intent"] == "Rejection [FINAL OUTPUT]"
-        or state["user_intent"] == "Stop"
-    ):
+    logger.info(f">> Route to next node START intention: {state['intention']}")
+    if state["intention"] == "STOP" or state["intention"] == "SKIP":
         logger.info(">> Route to next node: script_agent")
         return "script_agent"
     logger.info(">> Route to next node: question_agent")
@@ -86,14 +74,14 @@ def route_to_next_node(state: DirectorState) -> str:
 def create_director_agent(checkpointer=None):
     workflow = StateGraph(state_schema=DirectorState)
 
-    workflow.add_node("intent_agent", classify_intent)
+    workflow.add_node("intention_agent", classify_intention)
     workflow.add_node("script_agent", script)
     workflow.add_node("question_agent", question)
 
-    workflow.add_edge(START, "intent_agent")
+    workflow.add_edge(START, "intention_agent")
 
     workflow.add_conditional_edges(
-        "intent_agent",
+        "intention_agent",
         route_to_next_node,
         {
             "question_agent": "question_agent",

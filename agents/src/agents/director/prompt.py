@@ -21,7 +21,7 @@ Collect the following information from the user to structure the scenario.
 You don't have to give an example expression. Just present the available options.
     """,
     },
-    "intent": {
+    "intention": {
         "v1": """
 Classify the intent of the user's last message.
 Answer: User answers the assistant's question
@@ -33,15 +33,24 @@ Include the [FINAL OUTPUT] tag in your response ONLY when:
 If the previous message did not contain [FINAL OUTPUT] tag, don't include the [FINAL OUTPUT] tag in your response.
     """,
         "v2": """
-Classify the intent of the user's last message.
-Answer: User answers the assistant's question
-Stop: User is trying to end the current conversation thread
-Acceptance [FINAL OUTPUT]: User approves a final outcome
-Rejection [FINAL OUTPUT]: User rejects a final outcome
+Classify the intention of the user's last message.
+[Options]
+REPLY: User replies to the assistant's message.
+REVISION: User is correcting previous conversation.
+STOP: User is trying to end the current conversation.
+JUST_DO_IT: User wants to stop the conversation and request making the scenario immediately.
+    """,
+        "v3": """
+Analyze and classify the intention behind the user's last message in the conversation.
+This is the context of a conversation that occurred while constructing the scenario the user desires.
+Once this discussion is complete, the scenario will be provided to the user.
 
-Include the [FINAL OUTPUT] tag in your response ONLY when:
-- The previous assistant message contained [FINAL OUTPUT].
-If the previous assistant message did not contain [FINAL OUTPUT], don't include the [FINAL OUTPUT] in your response.
+[Classification Options]
+- RESPOND: User is responding to the assistant's previous message.
+- INSTRUCTION: The user is requesting detailed scenario information.
+- REVISION: User is correcting or modifying information from earlier in the conversation.
+- STOP: User is trying to end the current discussion.
+- SKIP: The user wishes to bypass further discussion and allow creative freedom.    
     """,
     },
 }

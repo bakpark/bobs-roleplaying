@@ -40,7 +40,7 @@ class ScriptInfoSchema(BaseModel):
 [Your Role]
 {self.script.user_role}
 
-[Bob Role]
+[Counterpart Role]
 {self.script.assistant_actor_role}
 
 [Your Missions]

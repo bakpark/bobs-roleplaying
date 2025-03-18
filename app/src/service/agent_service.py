@@ -1,14 +1,14 @@
 import asyncio
-from agents.director.schema.schema import DirectorState
+from typing import cast
 from agents.director.graph import create_director_agent
 from agents.player.graph import create_player_agent
 from agents.player.prompt import get_player_system_prompt
 from agents.scriptwriter.schema import ActingScriptSchema
 from langchain.schema import HumanMessage, AIMessage
+from pydantic import BaseModel, Field
 from src.schema import DirectorResponse, PlayerResponse
-from src.translation import toKorean
+from src.translation import to_korean_with_agent
 from src.infra.db import DATABASE_URL, insert_script, get_script
-from src.infra.session import SessionData
 from util.logging import logger
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
@@ -25,28 +25,52 @@ async def direct(email: str, message: str, session_id: str) -> DirectorResponse:
             logger.info(f"No checkpoint found for session_id: {session_id}")
             messages = [AIMessage(content=beginning_message)]
 
-        response: DirectorState = await director_agent.ainvoke(
+        response = await director_agent.ainvoke(
             {"messages": messages + [HumanMessage(content=message)]},
             config={"configurable": {"thread_id": session_id}},
         )
 
-        # response 결과 변환
-        end = response["user_intent"] in [
-            "Acceptance [FINAL OUTPUT]",
-            "Stop",
-            "Just do it",
-        ]
-        script_id = None
-        if end:
-            acting_script = response["script"]
-            script_id = await insert_script(acting_script.model_dump_json(), email)
-
         ai_message = response["messages"][-1].content
+
+        if response["done"]:
+            acting_script = response["script"]
+
+            # Insert script into db
+            script_id = await insert_script(acting_script.model_dump_json(), email)
+            return DirectorResponse(ok=True, content=ai_message, script_id=script_id)
+
         keywords = response["question"].options
 
-        return DirectorResponse(
-            ok=True, content=ai_message, script_id=script_id, keywords=keywords
-        )
+        return DirectorResponse(ok=True, content=ai_message, keywords=keywords)
+
+
+class TranslationSchema(BaseModel):
+    message: str = Field(..., description="The translation of the message.")
+    possible_answers: list[str] = Field(
+        ..., description="The translation of the possible answers."
+    )
+
+
+async def _translate_agent_response(response: dict) -> TranslationSchema:
+    message = response["messages"][-1].content
+    answers = ",".join([answer.response for answer in response["expected_response"]])
+
+    original = """
+    [Message]
+    {message}
+
+    [Possible Answers]
+    {answers}
+    """.format(
+        message=message, answers=answers
+    )
+
+    translated: TranslationSchema = cast(
+        TranslationSchema, await to_korean_with_agent(original, TranslationSchema)
+    )
+    logger.info(f"Translated: {translated}")
+
+    return translated
 
 
 async def play(script_id: str, message: str, session_id: str) -> PlayerResponse:
@@ -68,11 +92,7 @@ async def play(script_id: str, message: str, session_id: str) -> PlayerResponse:
                 }
             },
         )
-
-        # 비동기 병렬 번역
-        translated_suggestions = await asyncio.gather(
-            *[toKorean(content.response) for content in response["expected_response"]]
-        )
+        translated_response = await _translate_agent_response(response)
 
         return PlayerResponse(
             ok=True,
@@ -82,10 +102,10 @@ async def play(script_id: str, message: str, session_id: str) -> PlayerResponse:
             suggestions=[
                 {
                     "id": f"suggestion_{i+1}",
-                    "title": content.response,
-                    "tags": [content.difficulty],
-                    "description": translated_suggestions[i],
+                    "title": suggestion.response,
+                    "tags": [suggestion.difficulty],
+                    "description": translated_response.possible_answers[i],
                 }
-                for i, content in enumerate(response["expected_response"])
+                for i, suggestion in enumerate(response["expected_response"])
             ],
         )

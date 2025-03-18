@@ -725,6 +725,8 @@
                     .then(response => response.json())
                     .then(data => {
                         const directing = data.directing;
+
+                        // add situation card
                         const situationCard = document.createElement('div');
                         situationCard.className = 'scenario-card';
                         situationCard.innerHTML = `
@@ -733,6 +735,7 @@
                         `;
                         scenarioList.appendChild(situationCard);
 
+                        // add user role card
                         const userRoleCard = document.createElement('div');
                         userRoleCard.className = 'scenario-card';
                         userRoleCard.innerHTML = `
@@ -741,6 +744,9 @@
                         `;
                         scenarioList.appendChild(userRoleCard);
 
+                        // add counter
+
+                        // add user missions card
                         directing.missions.forEach(mission => {
                             const missionCard = document.createElement('div');
                             missionCard.className = 'mission-card';
@@ -801,8 +807,7 @@
                         </div>
                     `;
                     suggestionCard.addEventListener('click', () => {
-                        messageInput.value = suggestion.description;
-                        messageInput.focus();
+                        playTTS(suggestion.title);
                     });
                     suggestionsList.appendChild(suggestionCard);
                 });

@@ -6,15 +6,15 @@ from pydantic import BaseModel, Field
 class UserMission(BaseModel):
     main: str = Field(
         ...,
-        description="The mission when completed, concludes the scenario (include clear completion conditions).",
+        description="The user mission when completed, concludes the scenario (include clear completion conditions).",
     )
     sub: str = Field(
         ...,
-        description="The mission that can be achieved through specific actions or dialogue choices.",
+        description="The user mission that can be achieved through specific actions or dialogue choices.",
     )
     hidden: str = Field(
         ...,
-        description="The mission that can be related to the sub mission.",
+        description="The user mission that can be related to the sub mission.",
     )
 
 
@@ -24,9 +24,17 @@ class ActingScriptSchema(BaseModel):
     )
     situation: str = Field(..., description="The situation of the scenario.")
     assistant_actor_role: str = Field(
-        ..., description="The role and instructions of the ai assistant."
+        ...,
+        description="The role of the ai assistant. Must include important information in scenario.",
     )
-    user_role: str = Field(..., description="The role of the user")
+    assistant_actor_instructions: str = Field(
+        ...,
+        description="The acting instructions for the ai assistant for the scenario.",
+    )
+    user_role: str = Field(
+        ...,
+        description="The role of the user. Must include important information in scenario.",
+    )
     user_missions: UserMission = Field(
         ..., description="The missions of the user through the scenario."
     )
@@ -41,7 +49,7 @@ class ActingScriptSchema(BaseModel):
 [Your Role]
 {self.user_role}
 
-[Bob Role]
+[Counterpart Role]
 {self.assistant_actor_role}
 
 [Your Missions]
