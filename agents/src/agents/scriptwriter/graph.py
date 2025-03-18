@@ -11,7 +11,7 @@ from agents.scriptwriter.prompt import scriptwriter_system_prompt
 from agents.scriptwriter.schema import ActingScriptSchema
 
 model = ChatAnthropic(
-    model="claude-3-7-sonnet-latest", temperature=1.0
+    model="claude-3-5-haiku-latest", temperature=1.0
 ).with_structured_output(ActingScriptSchema)
 
 
@@ -19,7 +19,7 @@ def call_model(state: AgentState, config: RunnableConfig) -> AgentState:
     response = cast(
         ActingScriptSchema,
         model.invoke(
-            input=[SystemMessage(content=scriptwriter_system_prompt["v2"])]
+            input=[SystemMessage(content=scriptwriter_system_prompt["v3"])]
             + state["messages"],
             config=config,
         ),
@@ -34,7 +34,7 @@ async def async_call_model(state: AgentState, config: RunnableConfig) -> AgentSt
     response = cast(
         ActingScriptSchema,
         await model.ainvoke(
-            input=[SystemMessage(content=scriptwriter_system_prompt["v2"])]
+            input=[SystemMessage(content=scriptwriter_system_prompt["v3"])]
             + state["messages"],
             config=config,
         ),

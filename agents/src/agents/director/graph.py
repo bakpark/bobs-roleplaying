@@ -68,12 +68,15 @@ def route_to_next_node(state: DirectorState) -> str:
         or state["user_intent"] == "Just do it"
     ):
         if state.get("script"):
-            logger.info(f">> Route to next node FINAL SCRIPT: {state['script']}")
+            logger.info(f">> FINAL SCRIPT: {state['script']}")
             return "END"
         else:
             logger.info(">> Route to next node: script_agent")
             return "script_agent"
-    if state["user_intent"] == "Stop":
+    if (
+        state["user_intent"] == "Rejection [FINAL OUTPUT]"
+        or state["user_intent"] == "Stop"
+    ):
         logger.info(">> Route to next node: script_agent")
         return "script_agent"
     logger.info(">> Route to next node: question_agent")
