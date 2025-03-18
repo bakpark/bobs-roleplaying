@@ -21,9 +21,8 @@ class Mission(BaseModel):
 
 class DirectingScriptResponse(BaseModel):
     ok: bool
-    user_character: str
-    assistant_character: str
-    assistant_instructions: str
+    user_role: str
+    counterpart_role: str
     situation: str
     missions: list[Mission]
 
@@ -33,9 +32,8 @@ class DirectingScriptResponse(BaseModel):
     ) -> "DirectingScriptResponse":
         return DirectingScriptResponse(
             ok=True,
-            user_character=acting_script.user_role,
-            assistant_character=acting_script.assistant_actor_role,
-            assistant_instructions=acting_script.assistant_actor_instructions,
+            user_role=acting_script.user_role,
+            counterpart_role=acting_script.assistant_actor_role,
             situation=acting_script.situation,
             missions=[
                 Mission(

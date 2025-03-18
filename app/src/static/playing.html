@@ -744,7 +744,14 @@
                         `;
                         scenarioList.appendChild(userRoleCard);
 
-                        // add counter
+                        // add counterpart role card
+                        const counterpartRoleCard = document.createElement('div');
+                        counterpartRoleCard.className = 'scenario-card';
+                        counterpartRoleCard.innerHTML = `
+                            <div class="scenario-title">Counterpart Role</div>
+                            <div class="scenario-desc">${directing.counterpart_role}</div>
+                        `;
+                        scenarioList.appendChild(counterpartRoleCard);
 
                         // add user missions card
                         directing.missions.forEach(mission => {
