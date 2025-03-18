@@ -154,6 +154,12 @@
             text-align: right;
         }
 
+        .message-content-translated {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
         /* 채팅 입력 영역 */
         .chat-input-container {
             display: flex;
@@ -671,7 +677,8 @@
             ];
 
             // Initialize chat and panels
-            initializeChat();
+            // initializeChat();
+            sendMessage("Hi");
             initializeDirectings();
             initializeImages();
 
@@ -690,30 +697,6 @@
             });
 
             sendButton.addEventListener('click', sendMessage);
-
-            // Initialize chat with sample messages
-            function initializeChat() {
-                // Show typing indicator
-                showTypingIndicator();
-
-                // Send request to server with timeout
-                sendPlayerRequest("Hi.")
-                    .then(response => {
-                        hideTypingIndicator();
-                        if (!response.ok) {
-                            throw new Error(response.message);
-                        }
-                        addMessage('bot', response.content, getCurrentTime());
-                        changeSuggestions(response.suggestions);
-                        // TTS 재생
-                        playTTS(response.content);
-                    })
-                    .catch(error => {
-                        hideTypingIndicator();
-                        console.error('Error:', error);
-                        addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
-                    });
-            }
 
             // Initialize scenario panel
             function initializeDirectings() {
@@ -748,7 +731,7 @@
                         const counterpartRoleCard = document.createElement('div');
                         counterpartRoleCard.className = 'scenario-card';
                         counterpartRoleCard.innerHTML = `
-                            <div class="scenario-title">Counterpart Role</div>
+                            <div class="scenario-title">Counterpart</div>
                             <div class="scenario-desc">${directing.counterpart_role}</div>
                         `;
                         scenarioList.appendChild(counterpartRoleCard);
@@ -816,6 +799,7 @@
                     suggestionCard.addEventListener('click', () => {
                         playTTS(suggestion.title);
                     });
+                    suggestionCard.id = suggestion.id;
                     suggestionsList.appendChild(suggestionCard);
                 });
             }
@@ -914,16 +898,18 @@
             }
 
             // Send message function
-            function sendMessage() {
-                const message = messageInput.value.trim();
+            function sendMessage(controlled) {
+                const message = controlled || messageInput.value.trim();
                 if (message) {
-                    // Add user message
-                    const time = getCurrentTime();
-                    addMessage('user', message, time);
+                    if (!controlled) {
+                        // Add user message
+                        const time = getCurrentTime();
+                        addMessage('user', message, time);
 
-                    // Clear input
-                    messageInput.value = '';
-                    messageInput.style.height = 'auto';
+                        // Clear input
+                        messageInput.value = '';
+                        messageInput.style.height = 'auto';
+                    }
 
                     // Show typing indicator
                     showTypingIndicator();
@@ -935,10 +921,11 @@
                             if (!response.ok) {
                                 throw new Error(response.message);
                             }
-                            addMessage('bot', response.content, getCurrentTime());
+                            addMessage('bot', response.message, getCurrentTime());
                             changeSuggestions(response.suggestions);
+                            translateMessages(response.message, response.suggestions);
                             // TTS 재생
-                            playTTS(response.content);
+                            playTTS(response.message.value);
                         })
                         .catch(error => {
                             hideTypingIndicator();
@@ -959,7 +946,8 @@
 
                 const messageContent = document.createElement('div');
                 messageContent.className = 'message-content';
-                messageContent.textContent = content;
+                messageContent.textContent = content.value;
+                messageContent.id = content.id;
 
                 const timeStamp = document.createElement('div');
                 timeStamp.className = 'time-stamp';
@@ -1028,7 +1016,6 @@
                     }
 
                     const data = await response.json();
-                    console.log(data);
                     return data;
                 } finally {
                     clearTimeout(id);
@@ -1073,7 +1060,56 @@
                 }
             }
 
+            async function translateMessages(message, suggestions) {
+                try {
+                    answers = []
+                    suggestions.forEach(suggestion => {
+                        answers.push({ id: suggestion.id, value: suggestion.title })
+                    })
+                    const response = await fetch('/agents/player/translate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            language: 'kr',
+                            message: { id: message.id, value: message.value },
+                            answers: answers
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Translation request failed');
+                    }
+
+                    const result = await response.json();
+
+                    // Update the message display with translated content
+                    const messageContentDiv = document.querySelector(`#${result.message.id}`);
+                    if (messageContentDiv) {
+                        const translatedDiv = document.createElement('div');
+                        translatedDiv.className = 'message-content-translated';
+                        translatedDiv.textContent = result.message.value;
+                        messageContentDiv.appendChild(translatedDiv);
+                    }
+
+                    // Update suggestions with translated descriptions
+                    result.answers.forEach(answer => {
+                        const suggestionCard = document.querySelector(`#${answer.id}`);
+                        if (suggestionCard) {
+                            suggestionCard.description = answer.value;
+                            const descriptionElement = suggestionCard.querySelector('.suggestion-desc');
+                            if (descriptionElement) {
+                                descriptionElement.innerHTML = answer.value;
+                            }
+                        }
+                    })
+                } catch (error) {
+                    console.error('Translation error:', error);
+                }
+            }
         };
+
     </script>
 </body>
 

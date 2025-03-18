@@ -6,6 +6,7 @@ from src.schema import (
     SimpleMessageRequest,
     DirectorResponse,
 )
+from src.service.agent_service import PlayerMessage
 
 router = APIRouter()
 
@@ -31,3 +32,10 @@ async def player_endpoint(
         script_id, message_request.message, str(session_data.session_id)
     )
     return response
+
+
+@router.post("/player/translate")
+async def translate_player_message_endpoint(
+    player_message_request: PlayerMessage,
+) -> PlayerMessage:
+    return await agent_service.translate_player_message(player_message_request)

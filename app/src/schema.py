@@ -2,7 +2,12 @@ from typing import Any, Optional
 
 from agents.player.schema import MissionItem
 from agents.scriptwriter.schema import ActingScriptSchema
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class IdValue(BaseModel):
+    id: str = Field(..., description="It is a unique identifier.")
+    value: str
 
 
 class SimpleMessageRequest(BaseModel):
@@ -57,7 +62,7 @@ class DirectingScriptResponse(BaseModel):
 
 class PlayerResponse(BaseModel):
     ok: bool
-    content: str
+    message: IdValue
     missions: list[MissionItem]
     action: str
     suggestions: list[dict[str, Any]]
