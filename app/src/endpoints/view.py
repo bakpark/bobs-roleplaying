@@ -16,7 +16,7 @@ async def get_index(
     if session:
         return templates.TemplateResponse(
             request=request,
-            name="directing.html",
+            name="html/directing.html",
             context={"email": session.email, "session_id": session.session_id},
         )
 
@@ -25,7 +25,9 @@ async def get_index(
 
 @router.get("/login")
 async def get_login(request: Request):
-    return templates.TemplateResponse(request=request, name="login.html", context={})
+    return templates.TemplateResponse(
+        request=request, name="html/login.html", context={}
+    )
 
 
 @router.get("/logout")
@@ -46,7 +48,7 @@ async def get_play(
         return RedirectResponse(url="/login")
     return templates.TemplateResponse(
         request=request,
-        name="playing.html",
+        name="html/playing.html",
         context={
             "script_id": script_id,
             "email": session.email,
