@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Voice Chat Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 100%;
+            max-height: 90vh;
+        }
+
+        .chat-header {
+            background-color: #4A73FF;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .chat-message {
+            margin-bottom: 1rem;
+            max-width: 70%;
+            line-height: 1.4;
+            word-wrap: break-word;
+            padding: 0.6rem 1rem;
+            border-radius: 1rem;
+            clear: both;
+        }
+
+        .chat-message.user {
+            background-color: #4A73FF;
+            color: #fff;
+            float: right;
+            text-align: right;
+        }
+
+        .chat-message.system {
+            background-color: #EAEAEA;
+            color: #333;
+            float: left;
+        }
+
+        .chat-message.alt {
+            background-color: #FFD966;
+            float: left;
+            margin-top: 0.25rem;
+            cursor: pointer;
+        }
+
+        .chat-input-bar {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            border-top: 1px solid #ccc;
+        }
+
+        .chat-input-bar input[type="text"] {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 0.5rem 0.8rem;
+            margin-left: 0.25rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #4A73FF;
+            color: #fff;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #2f56cc;
+        }
+
+        .interim-message {
+            font-style: italic;
+            color: gray;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-header">음성 & 텍스트 입력 채팅</div>
+
+        <div id="chatContent" class="chat-content">
+            <!-- 채팅 메시지는 JS로 동적으로 추가됨 -->
+        </div>
+
+        <div class="chat-input-bar">
+            <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." />
+            <button id="micBtn">🎤</button>
+            <button id="sendBtn">전송</button>
+        </div>
+    </div>
+
+    <script>
+        // Web Speech API (SpeechRecognition)
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.lang = 'ko-KR';
+            recognition.continuous = true;   // 연속 인식
+            recognition.interimResults = true; // 중간 결과 on
+            recognition.maxAlternatives = 3; // 최대 3개의 후보
+        }
+
+        // DOM 요소
+        const chatContent = document.getElementById('chatContent');
+        const chatInput = document.getElementById('chatInput');
+        const micBtn = document.getElementById('micBtn');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // (1) 메시지 생성 함수
+        function createMessage(text, sender = 'system') {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('chat-message', sender);
+            msgDiv.textContent = text;
+            chatContent.appendChild(msgDiv);
+            chatContent.scrollTop = chatContent.scrollHeight; // 스크롤 하단 고정
+            return msgDiv;
+        }
+
+        // (2) 채팅에 유저 메시지(텍스트) 표시
+        function addUserMessage(text) {
+            if (!text.trim()) return;
+            createMessage(text, 'user');
+            chatInput.value = '';
+        }
+
+        // (3) 채팅에 음성 인식 중간 결과 표시
+        function showInterimResult(text) {
+            // 이미 존재하는 interim-message가 있으면 업데이트, 없으면 새로 생성
+            let interimElem = document.getElementById('interimElem');
+            if (!interimElem) {
+                interimElem = document.createElement('div');
+                interimElem.classList.add('chat-message', 'system', 'interim-message');
+                interimElem.id = 'interimElem';
+                chatContent.appendChild(interimElem);
+            }
+            interimElem.textContent = text;
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        // (4) 최종 결과 처리 & 대체 결과 표시
+        function showFinalResult(result) {
+            // 중간 결과 영역 제거
+            const interimElem = document.getElementById('interimElem');
+            if (interimElem) {
+                chatContent.removeChild(interimElem);
+            }
+
+            // 가장 확률 높은 결과
+            const mainTranscript = result[0].transcript;
+            const mainMsg = createMessage(mainTranscript, 'system');
+
+            // 후보(Alternative)를 별도 메시지로 표시, 클릭 시 입력창에 반영
+            for (let i = 1; i < result.length; i++) {
+                const altTranscript = result[i].transcript;
+                const altMsg = document.createElement('div');
+                altMsg.classList.add('chat-message', 'alt');
+                altMsg.innerHTML = `대체 #${i + 1}: ${altTranscript} (확률 ${result[i].confidence.toFixed(2)})`;
+                // 클릭 시 입력창으로 복사
+                altMsg.addEventListener('click', () => {
+                    chatInput.value = altTranscript.trim();
+                });
+                chatContent.appendChild(altMsg);
+            }
+
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        // (5) 음성인식 onresult 이벤트
+        if (recognition) {
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                // 이번 이벤트 내 모든 result를 순회
+                for (let i = 0; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        // 최종 결과 -> alternative 처리
+                        showFinalResult(result);
+                    } else {
+                        // 중간 결과
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+                if (interimTranscript) {
+                    showInterimResult(`(듣는 중) ${interimTranscript}`);
+                }
+            };
+
+            recognition.onerror = (err) => {
+                console.error('음성 인식 오류:', err.error);
+                createMessage(`음성 인식 오류: ${err.error}`, 'system');
+            };
+        } else {
+            // SpeechRecognition 미지원 시 처리
+            micBtn.disabled = true;
+            createMessage('이 브라우저는 음성 인식을 지원하지 않습니다.', 'system');
+        }
+
+        // (6) 버튼 이벤트
+        micBtn.addEventListener('click', () => {
+            if (!recognition) return;
+            if (!isRecording) {
+                recognition.start();
+                isRecording = true;
+                micBtn.textContent = '🛑'; // 버튼 표시 변경
+                createMessage('음성 인식을 시작합니다...', 'system');
+            } else {
+                recognition.stop();
+                isRecording = false;
+                micBtn.textContent = '🎤';
+                createMessage('음성 인식을 중지했습니다.', 'system');
+            }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            const text = chatInput.value.trim();
+            if (text) {
+                addUserMessage(text);
+            }
+        });
+
+        // 엔터키로 전송
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        });
+    </script>
+</body>
+
+</html>

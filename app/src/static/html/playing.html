@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bob Chat</title>
+    <link rel="stylesheet" href="/css/audio.css">
+    <script src="/js/audio.js"></script>
     <style>
         /* 기본 스타일 리셋 및 전역 설정 */
         * {
@@ -181,6 +183,7 @@
         }
 
         .send-button {
+            display: none;
             width: 45px;
             height: 45px;
             border-radius: 50%;
@@ -189,7 +192,6 @@
             border: none;
             margin-left: 10px;
             cursor: pointer;
-            display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s;
@@ -202,6 +204,42 @@
         .send-icon {
             width: 20px;
             height: 20px;
+        }
+
+        .microphone-button {
+            display: flex;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #4a6fa5;
+            color: white;
+            border: none;
+            margin-left: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .microphone-button:hover {
+            background-color: #3a5a8a;
+        }
+
+        .microphone-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .recording-button {
+            display: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            color: rgb(221, 47, 47);
+            border: solid 4px #4a6fa5;
+            margin-left: 10px;
+            cursor: pointer;
         }
 
         /* 패널 섹션 공통 스타일 */
@@ -582,18 +620,48 @@
             </div>
         </div>
         <!-- 좌측 채팅 컨테이너 -->
-        <div class="chat-container">
+        <div class="chat-container" id="chatContainer">
             <div class="chat-messages" id="chatMessages">
                 <!-- Messages will be added dynamically -->
             </div>
 
             <div class="chat-input-container">
                 <textarea class="chat-input" id="messageInput" placeholder="메시지를 입력하세요..." rows="1"></textarea>
+                <div class="recording-container" id="recordingContainer">
+                    <div class="recording-text" id="recordingText"></div>
+                    <div class="recording-time" id="recordingTime">00:00</div>
+                    <div class="recording-wave">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+                </div>
                 <button class="send-button" id="sendButton">
                     <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+                <button class="microphone-button" id="microphoneButton">
+                    <svg class="microphone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M12 3C13.1046 3 14 3.8954 14 5V11C14 12.1046 13.1046 13 12 13C10.8954 13 10 12.1046 10 11V5C10 3.8954 10.8954 3 12 3Z">
+                        </path>
+                        <path d="M19 11V10"></path>
+                        <path d="M5 11V10"></path>
+                        <path d="M7 21H17"></path>
+                        <path d="M12 17V21"></path>
+                        <path d="M5 10C5 13.3137 7.6863 16 11 16H13C16.3137 16 19 13.3137 19 10"></path>
+                    </svg>
+
+                </button>
+                <button class="recording-button" id="recordingButton">
+                    <svg class="record-icon" viewBox="0 0 24 24" fill="rgb(221, 47, 47)">
+                        <rect x="6" y="6" width="12" height="12"></rect>
                     </svg>
                 </button>
             </div>
@@ -659,13 +727,19 @@
 
             // DOM Elements
             const chatMessages = document.getElementById('chatMessages');
+            const chatContainer = document.getElementById('chatContainer');
             const messageInput = document.getElementById('messageInput');
-            const sendButton = document.getElementById('sendButton');
             const scenarioList = document.getElementById('scenarioList');
             const missionsList = document.getElementById('missionsList');
             const suggestionsList = document.getElementById('suggestionsList');
             const imageContent = document.getElementById('imageContent');
 
+            const sendButton = document.getElementById('sendButton');
+            const microphoneButton = document.getElementById('microphoneButton');
+            const recordingButton = document.getElementById('recordingButton');
+            const recordingContainer = document.getElementById('recordingContainer');
+            const recordingText = document.getElementById('recordingText');
+            const recordingTime = document.getElementById('recordingTime');
             // Sample images data
             const sampleImages = [
                 {
@@ -677,26 +751,9 @@
             ];
 
             // Initialize chat and panels
-            // initializeChat();
-            sendMessage("Hi");
+            sendPlayerRequestAndUpdateUI("Hi");
             initializeDirectings();
             initializeImages();
-
-            // Event listeners
-            messageInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-
-                // Auto resize textarea
-                setTimeout(() => {
-                    this.style.height = 'auto';
-                    this.style.height = (this.scrollHeight) + 'px';
-                }, 0);
-            });
-
-            sendButton.addEventListener('click', sendMessage);
 
             // Initialize scenario panel
             function initializeDirectings() {
@@ -898,45 +955,26 @@
             }
 
             // Send message function
-            function sendMessage(controlled) {
-                const message = controlled || messageInput.value.trim();
-                if (message) {
-                    if (!controlled) {
-                        // Add user message
-                        const time = getCurrentTime();
-                        addMessage('user', message, time);
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (!message) return;
 
-                        // Clear input
-                        messageInput.value = '';
-                        messageInput.style.height = 'auto';
-                    }
+                // Add user message
+                const time = getCurrentTime();
+                addMessage('user', message, time);
 
-                    // Show typing indicator
-                    showTypingIndicator();
-
-                    // Send request to server with timeout
-                    sendPlayerRequest(message, sessionId)
-                        .then(response => {
-                            hideTypingIndicator();
-                            if (!response.ok) {
-                                throw new Error(response.message);
-                            }
-                            addMessage('bot', response.message, getCurrentTime());
-                            changeSuggestions(response.suggestions);
-                            translateMessages(response.message, response.suggestions);
-                            // TTS 재생
-                            playTTS(response.message.value);
-                        })
-                        .catch(error => {
-                            hideTypingIndicator();
-                            console.error('Error:', error);
-                            addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
-                        });
-                }
+                // Clear input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+                sendPlayerRequestAndUpdateUI(message, sessionId);
+                voiceResult.updateInputDisplay();
             }
 
             // Add message to chat
             function addMessage(sender, content, time) {
+                if (!content.id) {
+                    content = { id: "user-" + Date.now(), value: content }
+                }
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${sender}-message`;
 
@@ -992,9 +1030,33 @@
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
 
+            function sendPlayerRequestAndUpdateUI(message) {
+                // Show typing indicator
+                showTypingIndicator();
+
+                // Send request to server with timeout
+                sendPlayerRequest(message)
+                    .then(response => {
+                        hideTypingIndicator();
+                        if (!response.ok) {
+                            throw new Error(response.message);
+                        }
+                        addMessage('bot', response.message, getCurrentTime());
+                        changeSuggestions(response.suggestions);
+                        translateMessages(response.message, response.suggestions);
+                        // TTS 재생
+                        playTTS(response.message.value);
+                    })
+                    .catch(error => {
+                        hideTypingIndicator();
+                        console.error('Error:', error);
+                        addMessage('bot', '죄송합니다. 오류가 발생했습니다.', getCurrentTime());
+                    });
+            }
+
             // Send request to player with timeout
             async function sendPlayerRequest(message) {
-                const timeout = 30000; // 30초 타임아웃
+                const timeout = 90000; // 90초 타임아웃
                 const controller = new AbortController();
                 const id = setTimeout(() => controller.abort(), timeout);
 
@@ -1108,7 +1170,30 @@
                     console.error('Translation error:', error);
                 }
             }
+
+            // 음성 입력
+            let voiceResult = initializeVoiceRecognition(
+                messageInput,
+                sendButton,
+                microphoneButton,
+                recordingButton,
+                recordingContainer,
+                recordingText,
+                recordingTime
+            );
+
+
+            sendButton.addEventListener('click', sendMessage);
+
+            messageInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
         };
+
+
 
     </script>
 </body>
