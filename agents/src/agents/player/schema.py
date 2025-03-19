@@ -1,13 +1,11 @@
 from typing import List, Literal
 
-from pydantic import BaseModel
-
-mission_ids = Literal["main", "sub", "hidden"]
+from pydantic import BaseModel, Field
 
 
 class MissionItem(BaseModel):
-    id: mission_ids
-    success: bool
+    id: Literal["main", "sub", "hidden"]
+    achievement: int = Field(..., description="The achievement of the mission. [0-100]")
 
 
 class ExpectedUserResponse(BaseModel):
@@ -18,5 +16,4 @@ class ExpectedUserResponse(BaseModel):
 class PlayerLlmResponseSchema(BaseModel):
     response: str
     missions: List[MissionItem]
-    action: str
     expected_user_response: List[ExpectedUserResponse]

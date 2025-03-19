@@ -75,7 +75,6 @@ async def play(script_id: str, message: str, session_id: str) -> PlayerResponse:
                 value=response["messages"][-1].content,
             ),
             missions=response["missions"],
-            action=response["action"],
             suggestions=[
                 {
                     "id": f"suggestion_{i+1}",

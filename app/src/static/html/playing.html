@@ -301,13 +301,13 @@
             font-weight: 600;
             margin-bottom: 5px;
             color: #2c3e50;
-            font-size: 1.3rem;
+            font-size: 1.1rem;
         }
 
         .scenario-desc,
         .mission-desc,
         .suggestion-desc {
-            font-size: 1.2rem;
+            font-size: 1.0rem;
             color: #7f8c8d;
         }
 
@@ -796,15 +796,16 @@
                         // add user missions card
                         directing.missions.forEach(mission => {
                             const missionCard = document.createElement('div');
+                            missionCard.id = 'mission-' + mission.mission_id
                             missionCard.className = 'mission-card';
                             missionCard.innerHTML = `
                                 <div class="mission-title">${mission.title}</div>
                                 <div class="mission-desc">${mission.description}</div>
                                 <div class="mission-status">
-                                    <span class="status-indicator" id="mission-${mission.mission_id}-status">${mission.mission_id === "hidden" ? "잠김" : "시작 전"}</span>
+                                    <span class="status-indicator">${mission.mission_id === "hidden" ? "잠김" : "시작 전"}</span>
                                 </div>
                                 <div class="mission-progress">
-                                    <div class="progress-bar" id="mission-${mission.mission_id}-progress" style="width: 0%"></div>
+                                    <div class="progress-bar" style="width: 0%"></div>
                                 </div>
                             `;
                             missionsList.appendChild(missionCard);
@@ -816,27 +817,22 @@
                     })
             }
 
-            // Initialize missions panel
-            function initializeMissions() {
+            // Update missions panel
+            function updateMissions(missions) {
                 missions.forEach(mission => {
-                    const missionCard = document.createElement('div');
-                    missionCard.className = 'mission-card';
-                    missionCard.innerHTML = `
-                        <div class="mission-title">${mission.title}</div>
-                        <div class="mission-desc">${mission.description}</div>
-                        <div class="mission-status">
-                            <span class="status-indicator">${mission.status}</span>
-                            <span>${mission.progress}% 완료</span>
-                        </div>
-                        <div class="mission-progress">
-                            <div class="progress-bar" style="width: ${mission.progress}%"></div>
-                        </div>
-                    `;
-                    missionCard.addEventListener('click', () => {
-                        messageInput.value = `${mission.title}에 대해 알려주세요.`;
-                        messageInput.focus();
-                    });
-                    missionsList.appendChild(missionCard);
+                    const missionCard = document.querySelector(`#mission-${mission.id}`);
+                    if (missionCard) {
+                        let is_hidden = mission.id === "hidden"
+                        let is_start = mission.achievement > 0
+                        let is_complete = mission.achievement == 100
+
+                        let status = is_complete ? "완료" : is_start ? "진행중" : is_hidden ? "잠김" : "시작 전";
+                        let previous = missionCard.querySelector('.progress-bar').style.width.replace("%", "");
+                        let progress = Math.max(previous, mission.achievement);
+
+                        missionCard.querySelector('.status-indicator').textContent = status;
+                        missionCard.querySelector('.progress-bar').style.width = `${progress}%`;
+                    }
                 });
             }
 
@@ -1046,6 +1042,7 @@
                         translateMessages(response.message, response.suggestions);
                         // TTS 재생
                         playTTS(response.message.value);
+                        updateMissions(response.missions);
                     })
                     .catch(error => {
                         hideTypingIndicator();

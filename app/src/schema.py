@@ -64,7 +64,6 @@ class PlayerResponse(BaseModel):
     ok: bool
     message: IdValue
     missions: list[MissionItem]
-    action: str
     suggestions: list[dict[str, Any]]
 
 

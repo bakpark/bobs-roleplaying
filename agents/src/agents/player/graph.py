@@ -39,7 +39,6 @@ async def call_model(state: PlayerAgentState, config: RunnableConfig) -> Dict[st
         "messages": [AIMessage(content=response.response)],
         "system_prompt": configuration.system_prompt,
         "missions": response.missions,
-        "action": response.action,
         "expected_response": response.expected_user_response,
     }
 

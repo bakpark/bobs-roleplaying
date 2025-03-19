@@ -3,7 +3,7 @@ function initializeVoiceRecognition(
     // 음성 인식 지원 확인
     const recognition = getSpeechRecognition();
     if(!recognition) {
-        console.log('이 브라우저는 음성 인식을 지원하지 않습니다.');
+        console.error('이 브라우저는 음성 인식을 지원하지 않습니다.');
         return null;
     }
 
@@ -14,7 +14,6 @@ function initializeVoiceRecognition(
     let localResult = ""
 
     recognition.onresult = function (event) {
-        console.log("onresult event");
         localResult = ""
         for(let i = 0; i < event.results.length; i++){
             localResult += event.results[i][0].transcript;
@@ -27,24 +26,18 @@ function initializeVoiceRecognition(
     };
 
     recognition.onstart = function () {
-        console.log('> 음성 인식 시작', new Date().toISOString());
     };
 
     recognition.onend = function () {
-        console.log('> 음성 인식 종료', new Date().toISOString());
-        console.log("onend", totalResult, localResult);
         totalResult += " " + localResult;
         localResult = "";
     };
 
     recognition.onspeechstart = function () {
-        console.log('>> 스피치 시작', new Date().toISOString());
     };
 
     recognition.onspeechend = function () {
-        console.log('>> 스피치 종료', new Date().toISOString());
         if(recording && restartSchedule){
-            console.log('>> 스피치 종료 후 음성 인식 시작', new Date().toISOString());
             recognition.stop();
             recognitionStart();
         }
@@ -73,6 +66,7 @@ function initializeVoiceRecognition(
             recordingContainer.style.display = 'none';
             messageInput.style.display = 'flex';
             recordingTime.textContent = '00:00';
+            recordingText.textContent = "";
             return;
         }
 
@@ -82,6 +76,7 @@ function initializeVoiceRecognition(
         recordingContainer.style.display = 'none';
         messageInput.style.display = 'flex';
         recordingTime.textContent = '00:00';
+        recordingText.textContent = "";
     }
 
     // 녹음 시간 업데이트 함수
@@ -97,7 +92,6 @@ function initializeVoiceRecognition(
     }
 
     function updateRecordingTexts(){
-        console.log("updateRecordingTexts", totalResult, localResult);
         messageInput.value = totalResult + localResult;
         recordingText.textContent = "";
         totalResult = "";
@@ -134,7 +128,6 @@ function initializeVoiceRecognition(
     }
 
     function stopRecrod() {
-        console.log("stopRecrod");
         recording = false;
         restartSchedule = false;
 

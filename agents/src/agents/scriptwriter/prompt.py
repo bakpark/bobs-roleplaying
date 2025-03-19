@@ -69,7 +69,6 @@ SCRIPT REQUIREMENTS:
    - Two sub-missions (labeled sub, hidden) that can be achieved through specific actions or dialogue choices
    - Each mission should be achievable within the dialogue context
 
-First of all, translate conversation in English and inference the role the user wants accurately(don't confuse with AI role) before writing the scenario. 
 If there is not enough information, you can be creative. Response English only.
 """,
 }
